@@ -17,17 +17,17 @@ from the satellite (e.g G10) to the GPS receiver (e.g ahup) for every
 day.
 
 The files have 7 columns:
-•	Sod: it represents the second of the day, it is my time array
-•	dStec/dt: the variations in time of the slant total electron 
+- Sod: it represents the second of the day, it is my time array
+- dStec/dt: the variations in time of the slant total electron 
 content (the parameter of interest) epoch by epoch (it is like a velocity)
-•	Lon: longitude epoch by epoch of the IPP, the point to which we refer 
+- Lon: longitude epoch by epoch of the IPP, the point to which we refer 
 the sTEC estimations
-•	Lat: latitude epoch by epoch of the IPP, the point to which we refer 
+- Lat: latitude epoch by epoch of the IPP, the point to which we refer 
 the sTEC estimations
-•	Hipp: height epoch by epoch of the IPP, the point to which we refer 
+- Hipp: height epoch by epoch of the IPP, the point to which we refer 
 the sTEC estimations
-•	Azi: the azimuth of the satellite epoch by epoch
-•	Ele: the elevation of the satellite epoch by epoch (usually we 
+- Azi: the azimuth of the satellite epoch by epoch
+- Ele: the elevation of the satellite epoch by epoch (usually we 
 don’t consider data with elevation under 20 degrees since they are too 
 noisy)
 
