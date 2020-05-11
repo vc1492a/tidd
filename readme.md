@@ -67,7 +67,7 @@ and bug fixes can be represented by branches with the prefix `fix/` versus
 then be made from these branches into the repository's `dev` branch 
 prior to being pulled into `master`. Pull requests which are works in 
 progress or ready for merging should be indicated by their respective 
-prefixes ([WIP] and [MRG]). Pull requests with the [MRG] prefix will be 
+prefixes (`[WIP]` and `[MRG]`). Pull requests with the `[MRG]` prefix will be 
 reviewed prior to being pulled into the `master` branch. 
 
 ### Tests
@@ -105,7 +105,7 @@ If citing this work, use the following:
 Stand-Alone GNSS Receiver: A Preliminary Feasibility Demonstration. 
 Savastano G., et. al.. Nature Scientific Reports, 2017. [PDF](https://www.nature.com/articles/srep46607.pdf).
 * Detecting Spacecraft Anomalies Using LSTMs and Nonparametric Dynamic Thresholding. Hundman K., et. al. 
-Knowledge Discovery and Data Mining (KDD), 2018. [PDF](https://dl.acm.org/doi/pdf/10.1145/3219819.3219845)
+Knowledge Discovery and Data Mining (KDD), 2018. [PDF](https://dl.acm.org/doi/pdf/10.1145/3219819.3219845).
 
 ## Acknowledgements
 - [University of California - Los Angeles (UCLA)](http://www.ucla.edu/)
