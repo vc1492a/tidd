@@ -1,8 +1,7 @@
 # Detecting Anomalies in Slant Total Electron Content
 
 A collaboration between the NASA Jet Propulsion Laboratory (JPL), 
-Sapienza University of Rome, and the University of California 
-- Los Angeles (UCLA). 
+Sapienza University of Rome, and the University of California - Los Angeles (UCLA). 
 
 [![Language](https://img.shields.io/badge/python-3.5%20%7C%203.6%20%7C%203.7%20%7C%203.8-blue)](#)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
