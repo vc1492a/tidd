@@ -36,11 +36,10 @@ pip install -r requirements_notebooks.txt # for notebooks
 
 ## The Data
 
-There are five folders in the `data` directory, where each folder 
-corresponds to a day ([see GNSS Web](http://navigationservices.agi.com/GNSSWeb/)). 
-The day of the earthquake is 302. We processed 5 days: two days before 
-the earthquake (day 300 and 301), the day of the earthquake (302) and 
-two days after the earthquake (303 and 304).
+The data includes data from both a 2012 Hawaii tsunami event and 
+a [2015 Chilean earthquake](https://earthquake.usgs.gov/earthquakes/eventpage/us20003k7a/executive). 
+Within the the `data` directory there is from each event, organized 
+by subdirectories which correspond to the year and day of year. 
 
 In every folder, you find a file for each satellite in view from a GPS 
 station: so you have the value of the slant total electron content 
@@ -62,6 +61,16 @@ the sTEC estimations
 - **Ele**: the elevation of the satellite epoch by epoch (usually we 
 don’t consider data with elevation under 20 degrees since they are too 
 noisy)
+
+### Hawaii
+ 
+The day of the earthquake is 302. We processed 5 days: two days before 
+the earthquake (day 300 and 301), the day of the earthquake (302) and 
+two days after the earthquake (303 and 304).
+
+### Chile 
+
+Only a day's worth of data is available for this event. 
 
 ## Contributing
 
