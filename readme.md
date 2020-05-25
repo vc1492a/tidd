@@ -3,13 +3,21 @@
 A collaboration between the NASA Jet Propulsion Laboratory (JPL), 
 Sapienza University of Rome, and the University of California - Los Angeles (UCLA). 
 
+[![Version](https://img.shields.io/badge/version-0.0.1-blue.svg)](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/archive/0.0.1.tar.gz)
 [![Language](https://img.shields.io/badge/python-3.5%20%7C%203.6%20%7C%203.7%20%7C%203.8-blue)](#)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Getting Started 
 
 First, setup a Python virtual environment in which to install project 
-dependencies and then check out the `notebooks` and `data` directories 
+dependencies and then install the library. First, pull the appropriate 
+branch and then install: 
+
+```
+pip install .
+```
+
+Make sure to check out the `notebooks` and `data` directories 
 which contain Jupyter notebooks with latest work and the source data 
 used in the experiments. 
 
@@ -75,7 +83,7 @@ When contributing, please ensure to run unit tests and add additional tests as
 necessary if adding new functionality. To run the unit tests, use `pytest`: 
 
 ```
-python3 -m pytest --cov=src
+python3 -m pytest --cov=src -vv
 ```
 
 This should report the result of your unit tests as well as information 
@@ -84,7 +92,28 @@ about code coverage.
 ### Versioning
 [Semantic versioning](http://semver.org/) is used for this project. 
 If contributing, please conform to semantic versioning guidelines when 
-submitting a pull request.
+submitting a pull request. 
+
+**NOTE**: Until relase to the [Python Package Index](https://pypi.org/) 
+(PyPI), we will be incrementing version numbers _prior to_ `0.1.x`. The 
+first release to the PyPI will be version `0.1`. 
+
+### Updating the Changelog
+Core contributors are responsible for maintaining `changelog.md` in 
+coordination with new releases. 
+
+### Releasing New Versions 
+
+To release a new version of the software, simply tag the realse after building 
+the distribution and wheels: 
+
+```bash
+python setup.py sdist bdist_wheel
+git tag x.x.x -m 'some commit message here'
+git push origin --tags <branch_name>
+git add dist/
+git push origin <branch_name>
+```
 
 ## License
 This project is licensed under the 
