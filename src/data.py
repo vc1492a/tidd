@@ -40,7 +40,6 @@ def read_day(location: str = "hawaii", year: int = 2000, day_of_year: int = 300)
     # merge all of the satellite specific dataframes together
     stec_values = pd.concat(stec_dfs, axis=1)
 
-    # TODO: change sod to timestamp index datetime index
     # convert second of day (sod) to timestamps
     sod = stec_values.index
     timestamps = list()
