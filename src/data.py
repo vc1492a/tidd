@@ -28,8 +28,19 @@ def read_day(location: str = "hawaii", year: int = 2000, day_of_year: int = 300)
 
     # gather the data for each satellite from this day and location
     stec_dfs = list()
+    print("Reading dataframes...")
     for sat in tqdm(satellite_paths):
-        df = pd.read_table(sat, index_col="sod", sep="\t\t| ", engine="python")
+        f = open(sat, 'r')
+        line1 = f.readline()
+        df = pd.read_table(
+            sat,
+            index_col="sod",
+            sep="\t\t| ",
+            names=line1.replace('#', '').replace("dsTEC/dt [TECU/s]", "dsTEC/dt").split(),
+            engine="python",
+            skiprows=1
+        )
+
         # rename the columns
         sat_name = str(sat).split("/")[-1].split(".")[0][:4]
         ground_station_name = str(sat).split("_")[-1].split(".")[0]
@@ -37,6 +48,7 @@ def read_day(location: str = "hawaii", year: int = 2000, day_of_year: int = 300)
         df = df.rename(columns={"dsTEC/dt": pass_id})
         stec_dfs.append(df[[pass_id]])
 
+    print("Concatenating dataframes...")
     # merge all of the satellite specific dataframes together
     stec_values = pd.concat(stec_dfs, axis=1)
 
