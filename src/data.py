@@ -29,7 +29,7 @@ def read_day(location: str = "hawaii", year: int = 2000, day_of_year: int = 300)
     # gather the data for each satellite from this day and location
     stec_dfs = list()
     for sat in tqdm(satellite_paths):
-        df = pd.read_table(sat, index_col="sod", sep="\t\t", engine="python")
+        df = pd.read_table(sat, index_col="sod", sep="\t\t| ", engine="python")
         # rename the columns
         sat_name = str(sat).split("/")[-1].split(".")[0][:4]
         ground_station_name = str(sat).split("_")[-1].split(".")[0]
