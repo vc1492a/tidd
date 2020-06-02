@@ -39,3 +39,12 @@ def test_read_data_day() -> None:
         assert random_date.dayofyear == s[1]
         assert random_date.year == s[0]
 
+        # check that the column count is the same across data types
+        cols = ["_lat", "_lon", "_h_ipp", "_ele", "_azi"]
+        counts = list()
+        columns = list(df.columns.values)
+        for c in cols:
+            type_cols = [col for col in columns if c in col]
+            counts.append(len(type_cols))
+
+        assert all(x == counts[0] for x in counts)
