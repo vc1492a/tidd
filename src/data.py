@@ -28,15 +28,36 @@ def read_day(location: str = "hawaii", year: int = 2000, day_of_year: int = 300)
 
     # gather the data for each satellite from this day and location
     stec_dfs = list()
+    print("Reading dataframes...")
     for sat in tqdm(satellite_paths):
-        df = pd.read_table(sat, index_col="sod", sep="\t\t", engine="python")
+        f = open(sat, 'r')
+        line1 = f.readline()
+        df = pd.read_table(
+            sat,
+            index_col="sod",
+            sep="\t\t| ",
+            names=line1.replace('#', '').replace("dsTEC/dt [TECU/s]", "dsTEC/dt").replace("elev", "ele").split(),
+            engine="python",
+            skiprows=1
+        )
+
         # rename the columns
-        sat_name = str(sat).split("/")[-1].split(".")[0]
+        sat_name = str(sat).split("/")[-1].split(".")[0][:4]
         ground_station_name = str(sat).split("_")[-1].split(".")[0]
         pass_id = sat_name + "__" + ground_station_name
-        df = df.rename(columns={"dsTEC/dt": pass_id})
-        stec_dfs.append(df[[pass_id]])
 
+        df = df.rename(columns={"dsTEC/dt": pass_id})
+        rename_columns = list(df.columns.values)
+        rename_columns.remove(pass_id)
+        new_cols = list()
+        for rn_col in rename_columns:
+            new_col = pass_id + "_" + rn_col
+            new_cols.append(new_col)
+            df = df.rename(columns={rn_col: new_col})
+
+        stec_dfs.append(df[[pass_id] + new_cols])
+
+    print("Concatenating dataframes...")
     # merge all of the satellite specific dataframes together
     stec_values = pd.concat(stec_dfs, axis=1)
 

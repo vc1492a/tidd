@@ -14,7 +14,7 @@ dependencies and then install the library. First, pull the appropriate
 branch and then install: 
 
 ```
-pip install .
+pip install . -e
 ```
 
 Make sure to check out the `notebooks` and `data` directories 
