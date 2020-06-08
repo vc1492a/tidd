@@ -31,7 +31,20 @@ and may be installed into a virtual environment in the following way:
 ```bash
 pip install -r requirements.txt
 pip install -r requirements_ci.txt # for unit tests 
-pip install -r requirements_notebooks.txt # for notebooks
+```
+
+Some of the visualizations within the Jupyter notebooks require 
+the [geos](https://trac.osgeo.org/geos/) library, which can be installed 
+using homebrew:
+
+```
+brew install geos
+```
+
+Then, install the notebook dependencies: 
+
+```
+pip install -r requirements_notebooks.txt
 ```
 
 ## The Data
