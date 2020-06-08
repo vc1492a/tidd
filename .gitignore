@@ -2,3 +2,4 @@
 /.idea
 /venv
 *.ipynb_checkpoints
+.mapbox_token
