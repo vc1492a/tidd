@@ -3,5 +3,5 @@
 /venv
 **/.ipynb_checkpoints
 *.pyc
-
+/src.egg-info/*
 
