@@ -1,4 +1,7 @@
 **.DS_store
 /.idea
 /venv
-*.ipynb_checkpoints
+**/.ipynb_checkpoints
+*.pyc
+/src.egg-info/*
+
