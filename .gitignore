@@ -3,3 +3,7 @@
 /venv
 *.ipynb_checkpoints
 .mapbox_token
+*.pyc
+/src.egg-info/*
+
+
