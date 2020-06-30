@@ -1,7 +1,10 @@
+git+https://github.com/matplotlib/basemap.git
 jupyter>=1.0.0
 matplotlib>=3.2.1
 numpy>=1.18.2
 pandas>=1.0.1
+Pillow==7.1.2
 plotly>=4.5.2
-seaborn>=0.10.0
+probscale==0.2.3
+seaborn>=0.10.1
 tqdm>=4.43.0

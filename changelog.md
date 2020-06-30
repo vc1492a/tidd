@@ -4,6 +4,13 @@ All notable changes to the software will be documented in this Changelog.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) 
 and adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). 
 
+## 0.0.2 
+### Added 
+- The function `data.normalize` which scales data on a specified scale 
+(such as [0, 1]). This function can be utilized in many analysis and 
+modeling workflows, where rescaling data is often needed for applying 
+specific approaches or algorithms. 
+
 ## 0.0.1
 ### Added
 
