@@ -5,5 +5,9 @@
 .mapbox_token
 *.pyc
 /src.egg-info/*
+.coverage
+
+#vscode files
+.vscode/*
 
 
