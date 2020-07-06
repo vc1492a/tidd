@@ -5,7 +5,7 @@ A set of unit tests which tests the capabilities provided within src/utils.py.
 import pandas as pd
 import pytest
 import random
-from src.data import read_day, normalize
+from src.data import read_day, rescale
 
 
 @pytest.fixture()
@@ -67,27 +67,27 @@ def test_read_data_day() -> None:
         assert all(x == counts[0] for x in counts)
 
 
-def test_normalize_data(test_dataframe) -> None:
+def test_rescale_data(test_dataframe) -> None:
     """
-    Tests whether the normalization function scales the data appropriately and
+    Tests whether the rescale function scales the data appropriately and
     returns the proper format response.
     :return: None
     """
 
     # normalize the data on a scale
-    df_normalized = normalize(test_dataframe, minimum=-1, maximum=1)
+    df_rescale = rescale(test_dataframe, minimum=-1, maximum=1)
 
     # check to ensure that the returned data is a dataframe
-    assert isinstance(df_normalized, pd.DataFrame)
+    assert isinstance(df_rescale, pd.DataFrame)
 
     # test to see if the dStec/dt columns have been normalized on the
     # scale specified
 
-    for col in df_normalized.columns.values:
+    for col in df_rescale.columns.values:
         if len(col.split("__")[1]) == 3:
 
-            col_min = df_normalized[col].min()
-            col_max = df_normalized[col].max()
+            col_min = df_rescale[col].min()
+            col_max = df_rescale[col].max()
 
             assert (col_min - -1) < 0.005
             assert (col_max - 1) < 0.005

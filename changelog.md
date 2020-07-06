@@ -6,7 +6,7 @@ and adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## 0.0.2 
 ### Added 
-- The function `data.normalize` which scales data on a specified scale 
+- The function `data.rescale` which scales data on a specified scale 
 (such as [0, 1]). This function can be utilized in many analysis and 
 modeling workflows, where rescaling data is often needed for applying 
 specific approaches or algorithms. 
