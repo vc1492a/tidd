@@ -10,6 +10,8 @@ and adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 (such as [0, 1]). This function can be utilized in many analysis and 
 modeling workflows, where rescaling data is often needed for applying 
 specific approaches or algorithms. 
+- A notebook that covers some Exploratory Data Analysis, located at 
+`notebooks/Exploration of Geographic Patterns.ipynb`.  
 
 ## 0.0.1
 ### Added
