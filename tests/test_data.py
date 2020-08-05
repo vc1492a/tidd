@@ -39,8 +39,21 @@ def test_random_data() -> 'str':
     os.mkdir(day_path)
     file_path =  day_path + '/test3000.12o_G01.txt'
     with open(file_path, 'w') as test_file:
-        index_row = 'sod\t\tdsTEC/dt\t\tlon\t\tlat\t\th_ipp\t\telev\t\tazi\n'
-        test_data_row = '8250.0\t\t-0.01919536491673681\t\t-165.3638966481876\t\t24.961242295471187\t\t349982.9213181995\t\t10.1815617588652\t\t302.5328897665781\n'
+        index_row = (
+            'sod\t\t'
+            'dsTEC/dt\t\t'
+            'lon\t\tlat\t\t'
+            'h_ipp\t\telev\t\tazi\n'
+        )
+        test_data_row = (
+            '8250.0\t\t'
+            '-0.01919536491673681\t\t'
+            '-165.3638966481876\t\t'
+            '24.961242295471187\t\t'
+            '349982.9213181995\t\t'
+            '10.1815617588652\t\t'
+            '302.5328897665781\n'
+        )
         test_file.write(index_row)
         test_file.write(test_data_row)
     return file_path
