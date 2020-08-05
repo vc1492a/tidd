@@ -95,15 +95,24 @@ def test_read_data_day(test_random_data) -> None:
 
 
 
-def test_normalize_data(test_dataframe) -> None:
+def test_normalize_data(test_random_data) -> None:
     """
     Tests whether the normalization function scales the data appropriately and
     returns the proper format response.
     :return: None
     """
+    file_path = test_random_data.split('/') 
 
+    s = tuple((int(file_path[3]), int(file_path[4]), file_path[2]))
+
+    # try to read data from a specific location
+    df = read_day(
+        location=s[2],
+        year=s[0],
+        day_of_year=s[1]
+    )
     # normalize the data on a scale
-    df_normalized = normalize(test_dataframe, minimum=-1, maximum=1)
+    df_normalized = normalize(df, minimum=-1, maximum=1)
 
     # check to ensure that the returned data is a dataframe
     assert isinstance(df_normalized, pd.DataFrame)
@@ -119,4 +128,11 @@ def test_normalize_data(test_dataframe) -> None:
 
             assert (col_min - -1) < 0.005
             assert (col_max - 1) < 0.005
+
+     # deleting the test files
+    os.remove(test_random_data)
+    # deleting the directories
+    os.rmdir('/'.join(file_path[:-1]))
+    os.rmdir('/'.join(file_path[:-2]))
+    os.rmdir('/'.join(file_path[:-3]))
 
