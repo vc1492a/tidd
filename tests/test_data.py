@@ -1,5 +1,5 @@
 """
-A set of unit tests which tests the capabilities provided within src/utils.py.
+A set of unit tests which tests the capabilities provided within src/data.py.
 """
 
 import pandas as pd
@@ -9,27 +9,12 @@ from src.data import read_day, normalize
 import os
 
 
-@pytest.fixture()
-def test_dataframe() -> 'pd.DataFrame':
-    """
-    Fixture that reads data necessary for running tests.
-    :return: A test dataframe booyah.
-    """
-
-    df = read_day(
-        location="hawaii",
-        year=2012,
-        day_of_year=303
-    )
-
-    return df
-
 @pytest.fixture
 def test_random_data() -> 'str':
     """
     fixture that creates the random data for testing
     with read_data
-    :return: the file paths of the random data
+    :yield: the file paths of the random data
     """
     path = './data/test'
     year_path = path + '/2012'
@@ -56,7 +41,15 @@ def test_random_data() -> 'str':
         )
         test_file.write(index_row)
         test_file.write(test_data_row)
-    return file_path
+    yield file_path
+
+    # deleting the test files
+    os.remove(file_path)
+    file_path = file_path.split('/')
+    # deleting the directories
+    os.rmdir('/'.join(file_path[:-1]))
+    os.rmdir('/'.join(file_path[:-2]))
+    os.rmdir('/'.join(file_path[:-3]))
 
 
 def test_read_data_day(test_random_data) -> None:
@@ -98,15 +91,6 @@ def test_read_data_day(test_random_data) -> None:
 
     assert all(x == counts[0] for x in counts)
 
-    # deleting the test files
-    os.remove(test_random_data)
-    # deleting the directories
-    os.rmdir('/'.join(file_path[:-1]))
-    os.rmdir('/'.join(file_path[:-2]))
-    os.rmdir('/'.join(file_path[:-3]))
-
-
-
 
 def test_normalize_data(test_random_data) -> None:
     """
@@ -141,11 +125,4 @@ def test_normalize_data(test_random_data) -> None:
 
             assert (col_min - -1) < 0.005
             assert (col_max - 1) < 0.005
-
-     # deleting the test files
-    os.remove(test_random_data)
-    # deleting the directories
-    os.rmdir('/'.join(file_path[:-1]))
-    os.rmdir('/'.join(file_path[:-2]))
-    os.rmdir('/'.join(file_path[:-3]))
 
