@@ -87,7 +87,7 @@ def read_day(location: str = "hawaii", year: int = 2000, day_of_year: int = 300)
     return df
 
 
-def rescale(dataframe: 'pd.DataFrame', minimum: int = 0, maximum: int = 1) -> 'pd.DataFrame':
+def normalize(dataframe: 'pd.DataFrame', minimum: int = 0, maximum: int = 1) -> 'pd.DataFrame':
     """
     Rescales the dStec/dt values on a scale from 0 to 1 or other scales common
     to many analysis and modeling problems.
