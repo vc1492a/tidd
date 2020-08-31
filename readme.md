@@ -35,10 +35,17 @@ pip install -r requirements_ci.txt # for unit tests
 
 Some of the visualizations within the Jupyter notebooks require 
 the [geos](https://trac.osgeo.org/geos/) library, which can be installed 
-using homebrew:
+using homebrew on macOS:
 
 ```
 brew install geos
+```
+
+On a linux machine, GEOS can be installed without root access if working 
+in Anaconda environments: 
+
+```
+conda install -c anaconda geos
 ```
 
 Then, install the notebook dependencies: 
