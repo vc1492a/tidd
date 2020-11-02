@@ -61,6 +61,16 @@ a [2015 Chilean earthquake](https://earthquake.usgs.gov/earthquakes/eventpage/us
 Within the the `data` directory there is from each event, organized 
 by subdirectories which correspond to the year and day of year. 
 
+### Downlaoding the Data 
+
+First, data must be downloaded and unpacked into the `data` directory:
+
+```shell
+curl -O https://tsunami-detection.s3-us-west-1.amazonaws.com/data.zip && unzip data.zip && rm data.zip
+```
+
+### About the Data
+
 In every folder, you find a file for each satellite in view from a GPS 
 station: so you have the value of the slant total electron content 
 (sTEC) encountered by the GPS signal during its path in the ionosphere 

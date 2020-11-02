@@ -6,6 +6,7 @@
 *.pyc
 /src.egg-info/*
 .coverage
+/data
 
 #vscode files
 .vscode/*
