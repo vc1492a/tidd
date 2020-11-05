@@ -3,7 +3,7 @@
 A collaboration between the NASA Jet Propulsion Laboratory (JPL), 
 Sapienza University of Rome, and the University of California - Los Angeles (UCLA). 
 
-[![Version](https://img.shields.io/badge/version-0.0.2-blue.svg)](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/archive/0.0.2.tar.gz)
+[![Version](https://img.shields.io/badge/version-0.0.3-blue.svg)](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/archive/0.0.3.tar.gz)
 [![Language](https://img.shields.io/badge/python-3.5%20%7C%203.6%20%7C%203.7%20%7C%203.8-blue)](#)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
@@ -60,6 +60,16 @@ The data includes data from both a 2012 Hawaii tsunami event and
 a [2015 Chilean earthquake](https://earthquake.usgs.gov/earthquakes/eventpage/us20003k7a/executive). 
 Within the the `data` directory there is from each event, organized 
 by subdirectories which correspond to the year and day of year. 
+
+### Downlaoding the Data 
+
+First, data must be downloaded and unpacked into the `data` directory:
+
+```shell
+curl -O https://tsunami-detection.s3-us-west-1.amazonaws.com/data.zip && unzip data.zip && rm data.zip
+```
+
+### About the Data
 
 In every folder, you find a file for each satellite in view from a GPS 
 station: so you have the value of the slant total electron content 

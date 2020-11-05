@@ -6,8 +6,10 @@
 *.pyc
 /src.egg-info/*
 .coverage
+/data
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
+
 
 #vscode files
 .vscode/*
