@@ -2,7 +2,6 @@ from src.modeling import *
 
 class Experiment(object):
     
-    # TODO: set the output path in the initializing rather than having it only within the repository
     def __init__(self,
                  independent_variables: list,
                  satellites: list,
@@ -20,7 +19,6 @@ class Experiment(object):
         # experiment setup
         self.year = year
         self.location = location
-        # TODO: below path will need rework when placed in src/modeling.py
         self.data_paths = Path('../data/' + self.location + '/' + str(self.year))
         self.days = [str(f).split("/")[-1] for f in self.data_paths.iterdir() if f.is_dir()]
         self.independent_variables = independent_variables
@@ -30,8 +28,7 @@ class Experiment(object):
         self.time_aggregation = time_aggregation
         self.batch_normalization = batch_normalization
         self.weight_decay = weight_decay
-        
-        
+
         #Create an output folder with naming structure(SatExperiment_with_Data_[location]_[Year])
         save_dir = output_save_directory + '/SatExperiment_' + self.location + '_' + str(self.year) + '/output'
         save_dir_path = Path(save_dir)
@@ -48,13 +45,8 @@ class Experiment(object):
                 
         information_df = pd.DataFrame(columns = cv_log_cols).set_index("ground station + satellite")
         information_df.to_csv(Path(str(save_dir_path) + "/" + "training_log.csv"))
-        self.save_dir = save_dir
-        
 
-        
-        
-        
-        
+        self.save_dir = save_dir
         self.models_root_name = models_root_name
         self.max_epochs = max_epochs
         
@@ -67,8 +59,6 @@ class Experiment(object):
         self.model = model
         self.dataframes = dict()  # stores individual dataframes read from csv
         
-        # TODO: experiment results
-        
         # This was just for me to know if the cuda device is set up correctly
         print("For this Experiment:")
         print("Using following CUDA device:", torch.cuda.get_device_name(self.cuda_device))
@@ -76,121 +66,27 @@ class Experiment(object):
         
         # experiment tracking - one entry per ground station and satellite combination 
         self.results = dict()
-        
-    def read_data(self) -> None:
-
-        # TODO: below can be made into a function in another class called Data
-        # read all of the data into a dictionary
-        self.dataframes = dict()
-        for d in self.days:
-            print("\n--- " + str(d) + "---")
-
-            # read in the data
-            df = data.read_day(
-                location=self.location,
-                year=self.year,
-                day_of_year=int(d)
-            )
-            self.dataframes[d] = {
-                "dataframe": df,
-            }
-        
-        # this dataframe will store all day dataframes by satellite and ground station combinations
-        self.dataframes["all_days"] = dict()
-            
-    def merge_data(self) -> None:
-        #
-        # TODO: much of the below can be made into a function in another class called Data
-        # concatenate the dataframes loaded previously into one large dataframe
-        df_all = pd.concat([self.dataframes[d]["dataframe"] for d in self.dataframes.keys() if d != "all_days"])
-
-        # filter for the satellites and store the respective dataframes
-        # NOTE: assumes len(self.satellites) >= len(self.ground_stations)
-        pairs = itertools.product(self.satellites, self.ground_stations)
-
-        for p in pairs:
-            
-            # get the data for the particular satellite 
-            df_sat = df_all.filter(regex=p[1] + "__" + p[0], axis=1)
-            
-            # filter out cases where modeling cannot be effectively applied
-            if df_sat.shape[0] <= 500:
-                # continue skips the rest of this for loop 
-                continue
-            
-            # apply the elevation filter 
-            if self.elevation_filter is not None: 
-                df_sat = df_sat[df_sat[p[1] + "__" + p[0] + "_ele"] > self.elevation_filter]
-            
-            # resample the data as specified in the experiment 
-            # aggregate using the mean value NOTE that this is a strategy that can be changed
-            # min, max, are other options
-            # our data does not contain more than 1 value per second so it is not affected 
-            # by this strategy, but step taken for safety 
-            df_model = df_sat.dropna().resample(self.time_aggregation).mean()
-            
-            # TODO: this should arguably not be here and be abstacted into something else and then called here
-            # some data transmission errors in model training data 
-            # not in scope for this initial work, so we want to cleanse the training data a bit 
-            # use local outlier detection approach (Local Outlier Probabilities, 2009) to do this 
-            # PyNomaly python library used to use the LoOP approach 
-            # maybe external??
-            if p[0] == "G07":
-            
-                try:
-
-                    # period of identified errors in transmission 
-                    filter_index = df_model.index.to_series().between('2012-10-22', '2012-10-23 23:59:00')
-
-                    # create a subsetted dataframe to work with 
-                    df_model_outliers = df_model[filter_index].dropna()
-
-                    # fit the LoOP Outlier Detection approach 
-                    m = loop.LocalOutlierProbability(
-                        df_model_outliers[
-                            [
-                                p[1] + "__" + p[0]
-                            ]
-                        ], 
-                        extent=3, 
-                        n_neighbors=500 # want to consider any and all neighbors so set to large size 
-                    ).fit()
-                    scores = m.local_outlier_probabilities
-                    df_model_outliers["outlier_scores"] = scores
-
-                    # the number of time periods before and after detected outlier to remove from the training data 
-                    # NOTE affected by specfied time_aggregation
-                    REMOVAL_WINDOW = 10 # number of minutes / points before and after 
-                    # cut-off value for identifiying an anomaly, which are > OUTLIER_THRESHOLD
-                    OUTLIER_THRESHOLD = 0.9 # on a scale [0, 1]
-
-                    # detect the outliers 
-                    outliers = df_model_outliers[df_model_outliers["outlier_scores"] > OUTLIER_THRESHOLD]
-
-                    # filter the training data 
-                    removal_windows = list()
-                    list_index = list(df_model.index.values)
-                    for idx in outliers.index.values:
-                        idx_i = list_index.index(idx)
-                        idx_range = [idx_i - REMOVAL_WINDOW, idx_i + REMOVAL_WINDOW]
-                        removal_windows.append(idx_range)
-                    for rw in removal_windows:
-                        df_model.iloc[rw[0]:rw[1], :] = None
-                
-                except Exception as ex:
-                    print("ERROR: Unable to filter localized outliers from " + p[1] + "__" + p[0])
-
-            # save
-            self.dataframes["all_days"][p[1] + "__" + p[0]] = {"merged_dataframe": df_model}
-            
-            
+    
+    
+    #TODO: migrate this to Data class
     def prep_data(self) -> None: 
         """
         Data is split into periods where any NaN values are removed. 
         These are then normalized and made into a dataset that can be used 
         for modeling (training, test, and validation sets.)
         """
+        self.dataframes = Data.read_data(
+            ground_stations=self.ground_stations,
+            satellites=self.satellites,
+            location=self.location,
+            year=self.year,
+            days=self.days,
+            elevation_filter=self.elevation_filter,
+            time_aggregation=self.time_aggregation
+            )
         
+        print("Finished reading data . . .")
+
         # first, remove NaNs and split the data into periods 
         for station_sat in tqdm(self.dataframes["all_days"].keys()):
             
