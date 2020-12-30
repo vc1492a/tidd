@@ -370,5 +370,5 @@ class Data:
 
             # save
             dataframes["all_days"][p[1] + "__" + p[0]] = {"merged_dataframe": df_model}
-            return dataframes
+        return dataframes
             
