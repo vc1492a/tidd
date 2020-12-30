@@ -253,3 +253,122 @@ class Data:
         data["train"] = periods[0:index_earthquake - 1]
 
         return data
+    
+    
+    @staticmethod
+    def read_data(
+        ground_stations: list, 
+        satellites: list, 
+        location: str, 
+        year: int, 
+        days: list, 
+        elevation_filter: Union[int, None] = None,
+        time_aggregation: str = "1min"
+        ) -> dict:
+    """
+
+    The read data function from Experiment
+    Used to load the data to the dataframe
+    
+    Previously were the read_data and merge_data within Experiments class
+    """
+
+        # read all of the data into a dictionary
+        dataframes = dict()
+        for d in days:
+            print("\n--- " + str(d) + "---")
+
+            # read in the data
+            df = data.read_day(
+                location=location,
+                year=year,
+                day_of_year=int(d)
+            )
+            dataframes[d] = {
+                "dataframe": df,
+            }
+        
+        # this dataframe will store all day dataframes by satellite and ground station combinations
+        dataframes["all_days"] = dict()
+
+        # concatenate the dataframes loaded previously into one large dataframe
+        df_all = pd.concat([dataframes[d]["dataframe"] for d in dataframes.keys() if d != "all_days"])
+
+        # filter for the satellites and store the respective dataframes
+        # NOTE: assumes len(self.satellites) >= len(self.ground_stations)
+        pairs = itertools.product(satellites, ground_stations)
+
+        for p in pairs:
+            # get the data for the particular satellite 
+            df_sat = df_all.filter(regex=p[1] + "__" + p[0], axis=1)
+            
+            # filter out cases where modeling cannot be effectively applied
+            if df_sat.shape[0] <= 500:
+                # continue skips the rest of this for loop 
+                continue
+            
+            # apply the elevation filter 
+            if elevation_filter is not None: 
+                df_sat = df_sat[df_sat[p[1] + "__" + p[0] + "_ele"] > elevation_filter]
+            
+            # resample the data as specified in the experiment 
+            # aggregate using the mean value NOTE that this is a strategy that can be changed
+            # min, max, are other options
+            # our data does not contain more than 1 value per second so it is not affected 
+            # by this strategy, but step taken for safety 
+            df_model = df_sat.dropna().resample(time_aggregation).mean()
+            # TODO: this should arguably not be here and be abstacted into something else and then called here
+            # some data transmission errors in model training data 
+            # not in scope for this initial work, so we want to cleanse the training data a bit 
+            # use local outlier detection approach (Local Outlier Probabilities, 2009) to do this 
+            # PyNomaly python library used to use the LoOP approach 
+            # maybe external??
+            if p[0] == "G07":
+            
+                try:
+
+                    # period of identified errors in transmission 
+                    filter_index = df_model.index.to_series().between('2012-10-22', '2012-10-23 23:59:00')
+
+                    # create a subsetted dataframe to work with 
+                    df_model_outliers = df_model[filter_index].dropna()
+
+                    # fit the LoOP Outlier Detection approach 
+                    m = loop.LocalOutlierProbability(
+                        df_model_outliers[
+                            [
+                                p[1] + "__" + p[0]
+                            ]
+                        ], 
+                        extent=3, 
+                        n_neighbors=500 # want to consider any and all neighbors so set to large size 
+                    ).fit()
+                    scores = m.local_outlier_probabilities
+                    df_model_outliers["outlier_scores"] = scores
+
+                    # the number of time periods before and after detected outlier to remove from the training data 
+                    # NOTE affected by specfied time_aggregation
+                    REMOVAL_WINDOW = 10 # number of minutes / points before and after 
+                    # cut-off value for identifiying an anomaly, which are > OUTLIER_THRESHOLD
+                    OUTLIER_THRESHOLD = 0.9 # on a scale [0, 1]
+
+                    # detect the outliers 
+                    outliers = df_model_outliers[df_model_outliers["outlier_scores"] > OUTLIER_THRESHOLD]
+
+                    # filter the training data 
+                    removal_windows = list()
+                    list_index = list(df_model.index.values)
+                    for idx in outliers.index.values:
+                        idx_i = list_index.index(idx)
+                        idx_range = [idx_i - REMOVAL_WINDOW, idx_i + REMOVAL_WINDOW]
+                        removal_windows.append(idx_range)
+                    for rw in removal_windows:
+                        df_model.iloc[rw[0]:rw[1], :] = None
+                
+                except Exception as ex:
+                    print("ERROR: Unable to filter localized outliers from " + p[1] + "__" + p[0])
+
+            # save
+            dataframes["all_days"][p[1] + "__" + p[0]] = {"merged_dataframe": df_model}
+            return dataframes
+            
