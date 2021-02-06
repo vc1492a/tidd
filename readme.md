@@ -66,7 +66,13 @@ by subdirectories which correspond to the year and day of year.
 First, data must be downloaded and unpacked into the `data` directory:
 
 ```shell
-curl -O https://tsunami-detection.s3-us-west-1.amazonaws.com/data.zip && unzip data.zip && rm data.zip
+cd data && curl -O https://tsunami-detection.s3-us-west-1.amazonaws.com/image_based_balanced.tar.gz && tar -xvzf image_based_balanced.tar.gz && rm image_based_balanced.tar.gz
+```
+
+Note that the above command downlaods the balanced dataset used in the paper. However, the full dataset is also available: 
+
+```shell
+cd data && curl -O https://tsunami-detection.s3-us-west-1.amazonaws.com/image_based.tar.gz && tar -xvzf image_based.tar.gz && rm image_based.tar.gz
 ```
 
 ### About the Data
