@@ -66,8 +66,11 @@ by subdirectories which correspond to the year and day of year.
 First, data must be downloaded and unpacked into the `data` directory:
 
 ```shell
-curl -O https://tsunami-detection.s3-us-west-1.amazonaws.com/data.zip && unzip data.zip && rm data.zip
+curl -O https://tsunami-detection.s3-us-west-1.amazonaws.com/data.tar.gz && tar -xvzf data.tar.gz && rm data.tar.gz
 ```
+
+Data used for experiments is located in `data/experiments`, while raw historical 
+data is available in the `chile` and `hawaii` directories. 
 
 ### About the Data
 
