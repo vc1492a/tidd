@@ -4,6 +4,12 @@ All notable changes to the software will be documented in this Changelog.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) 
 and adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). 
 
+## 0.1.0
+### Changed
+- Named the library the `Toolkit for Ionospheric Disturbance Detection (TIDD)` to better 
+reflect the purposes of the software and deep learning model.
+- The supported Python versions to Python 3.8 only.
+
 ## 0.0.3
 ### Changed
 - Renamed `data.normalize` to `data.rescale` to better reflect the 

@@ -1,10 +1,11 @@
-# Detecting Anomalies in Slant Total Electron Content
+# Toolkit for Ionospheric Disturbance Detection (TIDD)
 
-A collaboration between the NASA Jet Propulsion Laboratory (JPL), 
-Sapienza University of Rome, and the University of California - Los Angeles (UCLA). 
+The toolkit for the detection of Traveling Ionospheric Disturbances (TIDs) in the Earth's atmosphere as a result of 
+tsunami waves, earthquakes, large explosions and other phenomena. A collaboration between individuals and teams the 
+NASA Jet Propulsion Laboratory (JPL), Sapienza University of Rome and the University of California - Los Angeles (UCLA). 
 
-[![Version](https://img.shields.io/badge/version-0.0.3-blue.svg)](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/archive/0.0.3.tar.gz)
-[![Language](https://img.shields.io/badge/python-3.5%20%7C%203.6%20%7C%203.7%20%7C%203.8-blue)](#)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/archive/0.1.0.tar.gz)
+[![Language](https://img.shields.io/badge/python-3.8-blue)](#)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Getting Started 
@@ -61,7 +62,7 @@ a [2015 Chilean earthquake](https://earthquake.usgs.gov/earthquakes/eventpage/us
 Within the the `data` directory there is from each event, organized 
 by subdirectories which correspond to the year and day of year. 
 
-### Downlaoding the Data 
+### Downloading the Data 
 
 First, data must be downloaded and unpacked into the `data` directory:
 

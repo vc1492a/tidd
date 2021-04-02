@@ -3,9 +3,6 @@ language: python
 
 # Existing Python versions
 python:
-  - "3.5"
-  - "3.6"
-  - "3.7"
   - "3.8"
 
 # command to install dependencies
@@ -16,7 +13,7 @@ install:
 
 # run tests
 script:
-  - python -m pytest --cov=src
+  - python -m pytest --cov=tidd
 
 # report results
 after_success:
