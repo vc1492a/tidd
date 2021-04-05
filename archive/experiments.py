@@ -310,7 +310,7 @@ class Experiment(object):
 
                 # store the residuals in a directory for later analysis, further review for both test and validation sets 
                 # if a directory doesn't exist for the model, create it 
-                # TODO: below hard-coded path will need to be tweaked when pulling into src 
+                # TODO: below hard-coded path will need to be tweaked when pulling into tidd
                 #       maybe allow for dynamic input so that the output does not stay within the repository (Hamlin )
                 output_path = self.save_dir + '/' + station_sat + "/residuals"
                 if not os.path.exists(output_path):
