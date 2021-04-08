@@ -11,7 +11,7 @@ NASA Jet Propulsion Laboratory (JPL), Sapienza University of Rome and the Univer
 ## Getting Started 
 
 First, setup a Python virtual environment in which to install project 
-dependencies and then install the library. First, pull the appropriate 
+dependencies and then install the library. Then, pull the appropriate 
 branch and then install: 
 
 ```
