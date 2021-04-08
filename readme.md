@@ -179,6 +179,19 @@ Savastano G., et. al.. Nature Scientific Reports, 2017. [PDF](https://www.nature
 * Detecting Spacecraft Anomalies Using LSTMs and Nonparametric Dynamic Thresholding. Hundman K., et. al. 
 Knowledge Discovery and Data Mining (KDD), 2018. [PDF](https://dl.acm.org/doi/pdf/10.1145/3219819.3219845).
 
-## Acknowledgements
-- [University of California - Los Angeles (UCLA)](http://www.ucla.edu/)
+## Contributors
+- [NASA Jet Propulsion Laboratory](https://jpl.nasa.gov/)
+    - [Valentino Constantinou](https://www.github.com/vc1492a)
+- [Sapienza University of Rome](https://www.uniroma1.it/en/pagina-strutturale/home)
+    - [Michela Ravanelli](https://scholar.google.com/citations?user=w6sS0Q0AAAAJ&hl=it)
+- [University of California - Los Angeles (UCLA)](https://www.ucla.edu/)
+    - [Hamlin Liu](https://www.github.com/hamlinliu17)
     - [Dr. Jacob Bortnik](https://atmos.ucla.edu/people/faculty/jacob-bortnik)
+
+## Acknowledgements
+- [NASA Jet Propulsion Laboratory](https://jpl.nasa.gov/)
+  - Bryan Bales
+  - [Dr. Chris Mattmann](https://github.com/chrismattmann)
+  - [Virisha Timmaraju](https://github.com/virisha22)
+  - [Annie Didier](https://github.com/adidier17)
+  - [Dr. Brian Wilson](https://github.com/BrianWilson1)
