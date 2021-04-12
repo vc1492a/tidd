@@ -71,7 +71,7 @@ curl -O https://tsunami-detection.s3-us-west-1.amazonaws.com/data.tar.gz && tar 
 ```
 
 Data used for experiments is located in `data/experiments`, while raw historical 
-data is available in the `chile` and `hawaii` directories. 
+data is available in the `chile` and `hawaii` directories. The data is also used in a variety of tests. 
 
 ### About the Data
 
@@ -94,17 +94,15 @@ the sTEC estimations
 - **Azi**: the azimuth of the satellite epoch by epoch
 - **Ele**: the elevation of the satellite epoch by epoch (usually we 
 don’t consider data with elevation under 20 degrees since they are too 
-noisy)
+noisy)#
 
-### Hawaii
+#### Hawaii
  
-The day of the earthquake is 302. We processed 5 days: two days before 
-the earthquake (day 300 and 301), the day of the earthquake (302) and 
-two days after the earthquake (303 and 304).
+The day of the earthquake is 302. Data is available for days of year 290 through 304. 
 
-### Chile 
+#### Chile 
 
-Only a day's worth of data is available for this event. 
+Day of year 259 is available. 
 
 ## Contributing
 
@@ -126,7 +124,7 @@ When contributing, please ensure to run unit tests and add additional tests as
 necessary if adding new functionality. To run the unit tests, use `pytest`: 
 
 ```
-python3 -m pytest --cov=src -vv
+python3 -m pytest --cov=tidd -vv
 ```
 
 This should report the result of your unit tests as well as information 
