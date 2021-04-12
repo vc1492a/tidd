@@ -9,6 +9,8 @@ and adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 - Named the library the `Toolkit for Ionospheric Disturbance Detection (TIDD)` to better 
 reflect the purposes of the software and deep learning model.
 - The supported Python versions to Python 3.8 only.
+- Refactored the code to pull existing functionality contained in Jupyter notebooks to 
+the `tidd` core. 
 
 ## 0.0.3
 ### Changed
