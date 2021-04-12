@@ -9,7 +9,8 @@
 /data
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
-
+proposals
+documents
 
 #vscode files
 .vscode/*

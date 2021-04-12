@@ -1,20 +1,16 @@
 from setuptools import setup
 
 setup(
-    name='src',
+    name='tidd',
     packages=[''],
-    version='0.0.3',
+    version='0.1.0',
     description='',
     author='Valentino Constantinou, Hamlin Liu',
     author_email='vconstan@jpl.nasa.gov',
-    url='https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection',
-    download_url='https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/archive/0.0.3.tar.gz',
-    keywords=['tsunami', 'anomaly', 'detection'],
+    url='https://github.com/vc1492a/tidd',
+    download_url='https://github.com/vc1492a/tidd/archive/0.1.0.tar.gz',
+    keywords=['ionosphere', 'Earth', 'atmosphere', 'anomaly', 'detection', 'time-series', 'deep', 'learning'],
     classifiers=[],
     license='Apache License, Version 2.0',
-    install_requires=[
-        'pandas',
-        'scikit-learn',
-        'tqdm'
-    ]
+    install_requires=[]
 )

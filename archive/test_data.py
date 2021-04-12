@@ -1,5 +1,5 @@
 """
-A set of unit tests which tests the capabilities provided within src/data.py.
+A set of unit tests which tests the capabilities provided within tidd/data.py.
 """
 
 import pandas as pd

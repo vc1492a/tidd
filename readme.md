@@ -1,16 +1,17 @@
-# Detecting Anomalies in Slant Total Electron Content
+# Toolkit for Ionospheric Disturbance Detection (TIDD)
 
-A collaboration between the NASA Jet Propulsion Laboratory (JPL), 
-Sapienza University of Rome, and the University of California - Los Angeles (UCLA). 
+The toolkit for the detection of Traveling Ionospheric Disturbances (TIDs) in the Earth's atmosphere as a result of 
+tsunami waves, earthquakes, large explosions and other phenomena. A collaboration between individuals and teams the 
+NASA Jet Propulsion Laboratory (JPL), Sapienza University of Rome and the University of California - Los Angeles (UCLA). 
 
-[![Version](https://img.shields.io/badge/version-0.0.3-blue.svg)](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/archive/0.0.3.tar.gz)
-[![Language](https://img.shields.io/badge/python-3.5%20%7C%203.6%20%7C%203.7%20%7C%203.8-blue)](#)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/archive/0.1.0.tar.gz)
+[![Language](https://img.shields.io/badge/python-3.8-blue)](#)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Getting Started 
 
 First, setup a Python virtual environment in which to install project 
-dependencies and then install the library. First, pull the appropriate 
+dependencies and then install the library. Then, pull the appropriate 
 branch and then install: 
 
 ```
@@ -61,7 +62,7 @@ a [2015 Chilean earthquake](https://earthquake.usgs.gov/earthquakes/eventpage/us
 Within the the `data` directory there is from each event, organized 
 by subdirectories which correspond to the year and day of year. 
 
-### Downlaoding the Data 
+### Downloading the Data 
 
 First, data must be downloaded and unpacked into the `data` directory:
 
@@ -178,6 +179,19 @@ Savastano G., et. al.. Nature Scientific Reports, 2017. [PDF](https://www.nature
 * Detecting Spacecraft Anomalies Using LSTMs and Nonparametric Dynamic Thresholding. Hundman K., et. al. 
 Knowledge Discovery and Data Mining (KDD), 2018. [PDF](https://dl.acm.org/doi/pdf/10.1145/3219819.3219845).
 
-## Acknowledgements
-- [University of California - Los Angeles (UCLA)](http://www.ucla.edu/)
+## Contributors
+- [NASA Jet Propulsion Laboratory](https://jpl.nasa.gov/)
+    - [Valentino Constantinou](https://www.github.com/vc1492a)
+- [Sapienza University of Rome](https://www.uniroma1.it/en/pagina-strutturale/home)
+    - [Michela Ravanelli](https://scholar.google.com/citations?user=w6sS0Q0AAAAJ&hl=it)
+- [University of California - Los Angeles (UCLA)](https://www.ucla.edu/)
+    - [Hamlin Liu](https://www.github.com/hamlinliu17)
     - [Dr. Jacob Bortnik](https://atmos.ucla.edu/people/faculty/jacob-bortnik)
+
+## Acknowledgements
+- [NASA Jet Propulsion Laboratory](https://jpl.nasa.gov/)
+  - Bryan Bales
+  - [Dr. Chris Mattmann](https://github.com/chrismattmann)
+  - [Virisha Timmaraju](https://github.com/virisha22)
+  - [Annie Didier](https://github.com/adidier17)
+  - [Dr. Brian Wilson](https://github.com/BrianWilson1)
