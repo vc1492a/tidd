@@ -49,12 +49,8 @@ class Data:
     A class which provides functionality for reading data from local disk.
     """
 
-    def __init__(self):
-
-        # gather the data for each satellite from this day and location
-        self.stec_dfs = list()
-
-    def _process_file(self, satellite_name: str) -> pd.DataFrame:
+    @staticmethod
+    def _process_file(satellite_name: str) -> pd.DataFrame:
 
         """
         For a given satellite, reads in the satellite and returns a Pandas DataFrame.
@@ -92,11 +88,9 @@ class Data:
 
         new_cols.remove('sod')
 
-        self.stec_dfs.append(df[new_cols])
-
         return df[new_cols]
 
-    def read_day(self, location: str = "hawaii", year: int = 2000, day_of_year: int = 300,
+    def read_day(self, location: str = "hawaii", year: int = 2012, day_of_year: int = 300,
                  verbose: bool = True) -> pd.DataFrame:
         """
         Reads the data for a particular location and day of year.
@@ -121,26 +115,19 @@ class Data:
                            p != ".DS_Store"]
 
         if verbose:
-            logging.info("Reading files for: " + location + " " + str(year) + " " + str(day_of_year))
-
-        # pool = mp.Pool(os.cpu_count() - 1)  # to keep the system alive yo
-
-        # with pool as pp:
+            logger.info("Reading files for: " + location + " " + str(year) + " " + str(day_of_year))
 
         tqdm_out = TqdmToLogger(logger, level=logging.INFO)
-        with tqdm(file=tqdm_out, total=len(satellite_paths), mininterval=3, disable=operator.not_(verbose)) as pbar:
+        stec_dfs = list()
 
-            # for sat, _ in enumerate(pp.imap_unordered(self._process_file, satellite_paths)):
-            for sat in satellite_paths:
-
-                self._process_file(satellite_name=sat)
-                pbar.update()
+        for sat in tqdm(satellite_paths, file=tqdm_out, total=len(satellite_paths), mininterval=3, disable=operator.not_(verbose)):
+            stec_dfs.append(self._process_file(satellite_name=sat))
 
         if verbose:
-            logging.info("Merging files for: " + location + " " + str(year) + " " + str(day_of_year))
-        # merge all of the satellite specific dataframes together
+            logger.info("Merging files for: " + location + " " + str(year) + " " + str(day_of_year))
 
-        stec_values = pd.concat(self.stec_dfs, axis=1)
+        # merge all of the satellite specific dataframes together
+        stec_values = pd.concat(stec_dfs, axis=1)
 
         # convert second of day (sod) to timestamps
         sod = stec_values.index
@@ -164,6 +151,42 @@ class Data:
         df = df.set_index("timestamp")
 
         return df
+
+    @staticmethod
+    def read_days(days: list, location: str = "hawaii", year: int = 2012, verbose: bool = True) -> pd.DataFrame:
+
+        """
+        Reads multiple days worth of data for a particular location and year and returns the data as a Pandas
+        DataFrame.
+        :param days: a list of integers representing days of the year, e.g. [1, 2, 3]
+        :param location: Specifies the location in which we want to load data (default: hawaii).
+        :param year: Specifies the year in which to load data, specified as an integer (default: 2000).
+        :param verbose: Dictates whether messages and progress bars are pushed to stdout.
+        :return: A Pandas dataframe that includes the data for the specified location and year for multiple days, with
+        a Pandas datetime index and columns which represent combinations of satellites and ground stations.
+        """
+
+        # establish a logger
+        tqdm_out = TqdmToLogger(logger, level=logging.INFO)
+
+        # TODO: add multi-core processing         # num_cores: int = os.cpu_count() - 1
+        dfs = list()
+        for doy in tqdm(days, file=tqdm_out, total=len(days), mininterval=3, disable=operator.not_(verbose)):
+
+            dfs.append(
+                Data().read_day(
+                    location=location,
+                    year=year,
+                    day_of_year=doy,
+                    verbose=False
+                )
+            )
+
+        # concatenate the dataframes loaded previously into one large dataframe
+        df_all_days = pd.concat(dfs)
+
+        return df_all_days
+
 
 
 

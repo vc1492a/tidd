@@ -67,7 +67,8 @@ def test_read_data_day(test_random_data) -> None:
     df = Data().read_day(
         location=s[2],
         year=s[0],
-        day_of_year=s[1]
+        day_of_year=s[1],
+        verbose=False
     )
 
     # check to ensure that the returned data is a dataframe
@@ -90,3 +91,7 @@ def test_read_data_day(test_random_data) -> None:
         counts.append(len(type_cols))
 
     assert all(x == counts[0] for x in counts)
+
+    # TODO: add test for verbose flag
+
+# TODO: add test(s) for read_days
