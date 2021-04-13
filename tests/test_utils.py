@@ -68,7 +68,7 @@ def test_read_data_day(test_random_data) -> None:
         location=s[2],
         year=s[0],
         day_of_year=s[1],
-        verbose=False
+        verbose=True
     )
 
     # check to ensure that the returned data is a dataframe
@@ -92,6 +92,43 @@ def test_read_data_day(test_random_data) -> None:
 
     assert all(x == counts[0] for x in counts)
 
-    # TODO: add test for verbose flag
 
-# TODO: add test(s) for read_days
+def test_read_data_days(test_random_data) -> None:
+    """
+    Tests whether the read_days function reads the appropriate year and days
+    of year of data, and that it returns the data in the appropriate format.
+    :return: None
+    """
+
+    days = [300, 301]
+
+    # first read in the data
+    df = Data().read_days(
+        location="hawaii",
+        year=2012,
+        days=days,
+        verbose=True
+    )
+
+    # check to ensure that the returned data is a dataframe
+    assert isinstance(df, pd.DataFrame)
+
+    # check to ensure that the index is a Pandas DateTimeIndex
+    assert type(df.index).__name__ == "DatetimeIndex"
+
+    # check that the day corresponds to the correct day of year
+    random_date = random.choice(pd.to_datetime(df.index.values))
+    assert random_date.dayofyear in days
+    assert random_date.year == 2012
+
+    # check that the column count is the same across data types
+    cols = ["_lat", "_lon", "_h_ipp", "_ele", "_azi"]
+    counts = list()
+    columns = list(df.columns.values)
+    for c in cols:
+        type_cols = [col for col in columns if c in col]
+        counts.append(len(type_cols))
+
+    assert all(x == counts[0] for x in counts)
+    
+
