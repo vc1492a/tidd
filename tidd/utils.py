@@ -3,6 +3,8 @@ A collection of functions covering basic capabilities like:
 
 - Reading data from files and delivering Pandas DataFrames
 - Outputting the tqdm progress bar in sys.stdout.
+- Rescaling values to a specific range. This is a common technique used in many machine and
+deep learning applications.
 
 """
 
@@ -14,8 +16,9 @@ import operator
 import os
 import pandas as pd
 from pathlib import Path
-from tqdm import tqdm
+from sklearn.preprocessing import minmax_scale
 import sys
+from tqdm import tqdm
 
 # set logging verbosity
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)  # set to logging.DEBUG in development
@@ -189,4 +192,37 @@ class Data:
 
 
 
+class Transforms:
 
+    # TODO: split by nan function
+
+    # NOTE: does not yet have a test because we need a transform.split_by_nan function
+    def rescale_values(dataframe: pd.DataFrame, minimum: int = 0, maximum: int = 1,
+                       verbose: bool = True) -> pd.DataFrame:
+        """
+        Rescales the dStec/dt values on a scale from 0 to 1 or other scales common
+        to many analysis and modeling problems.
+        :param dataframe: a dataframe created by the read_day function that
+        contains dStec/dt values.
+        :param minimum: the minimum scale value, default 0.
+        :param maximum: the maximum scale value, default 1.
+        :param verbose: Dictates whether messages and progress bars are pushed to stdout.
+        :return: a dataframe identical to the input dataframe, but with
+        normalized values.
+        """
+
+        tqdm_out = TqdmToLogger(logger, level=logging.INFO)
+
+        for col in tqdm(dataframe.columns.values, file=tqdm_out, total=len(dataframe.columns.values), mininterval=3,
+                        disable=operator.not_(verbose)):
+            try:
+                if len(col.split("__")[1]) == 3:
+                    dataframe[col] = minmax_scale(X=dataframe[col], feature_range=(minimum, maximum))
+            except RuntimeWarning:
+                logger.warning(
+                    "Dataframe contained NaN values. Consider addressing and re-executing.", RuntimeWarning
+                )
+
+        return dataframe
+
+    # TODO: image generating code here
