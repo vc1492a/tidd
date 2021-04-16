@@ -12,13 +12,17 @@ deep learning applications.
 import datetime
 import io
 import logging
+import matplotlib.pyplot as plt
+import numpy as np
 import operator
 import os
 import pandas as pd
 from pathlib import Path
+from pyts.image import GramianAngularField
 from sklearn.preprocessing import minmax_scale
 import sys
 from tqdm import tqdm
+from typing import Union
 
 # set logging verbosity
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)  # set to logging.DEBUG in development
@@ -191,38 +195,147 @@ class Data:
         return df_all_days
 
 
-
 class Transforms:
 
     # TODO: split by nan function
 
-    # NOTE: does not yet have a test because we need a transform.split_by_nan function
-    def rescale_values(dataframe: pd.DataFrame, minimum: int = 0, maximum: int = 1,
-                       verbose: bool = True) -> pd.DataFrame:
+    @staticmethod
+    def get_station_satellite_combinations(dataframe: pd.DataFrame) -> list:
         """
-        Rescales the dStec/dt values on a scale from 0 to 1 or other scales common
-        to many analysis and modeling problems.
-        :param dataframe: a dataframe created by the read_day function that
-        contains dStec/dt values.
-        :param minimum: the minimum scale value, default 0.
-        :param maximum: the maximum scale value, default 1.
-        :param verbose: Dictates whether messages and progress bars are pushed to stdout.
-        :return: a dataframe identical to the input dataframe, but with
-        normalized values.
+        For a given Pandas DataFrame, gets all the possible combinations of
+        ground station and satellite.
+        :param dataframe: A Pandas DataFrame containing the modeling data.
+        :return: A list of ground station and satellite combination.
         """
 
+        combinations = list(set(["_".join(x.split("_")[0:3]) for x in dataframe.columns.values]))
+
+        return combinations
+
+    @staticmethod
+    def split_by_nan(dataframe: pd.DataFrame, min_sequence_length: int = 100) -> list:
+        """
+        Splits a Pandas DataFrame into a list of Pandas DataFrames based on periods of
+        consecutive NaN values. Also only retains dataframes of a certain number of periods.
+        :param dataframe: A Pandas Dataframe to split by consecutive NaNs.
+        :param min_sequence_length: The minimum length of values for the returned dataframes.
+        :return: a list of Pandas Dataframes with at least min_sequence_length observations.
+        """
+
+        # split by NaN
+        events = np.split(dataframe, np.where(np.isnan(dataframe))[0])
+
+        # keep non-NaN entries
+        events = [ev[~np.isnan(ev)] for ev in events if not isinstance(ev, np.ndarray)]
+
+        # filter by min_sequence_length
+        events = [ev.dropna() for ev in events if not ev.empty and ev.shape[0] > min_sequence_length]
+
+        return events
+
+    @staticmethod
+    def generate_images(events: list, labels: dict, output_dir: Union[str, Path], window_size: int = 60,
+                        event_size: int = 30, verbose: bool = True) -> None:
+
+        # TODO: add docstring
+
+        # establish a logger
         tqdm_out = TqdmToLogger(logger, level=logging.INFO)
 
-        for col in tqdm(dataframe.columns.values, file=tqdm_out, total=len(dataframe.columns.values), mininterval=3,
-                        disable=operator.not_(verbose)):
-            try:
-                if len(col.split("__")[1]) == 3:
-                    dataframe[col] = minmax_scale(X=dataframe[col], feature_range=(minimum, maximum))
-            except RuntimeWarning:
-                logger.warning(
-                    "Dataframe contained NaN values. Consider addressing and re-executing.", RuntimeWarning
-                )
+        for period in tqdm(events, file=tqdm_out, total=len(events), mininterval=3, disable=operator.not_(verbose)):
 
-        return dataframe
+            # get the doy
+            doy = period.index[0].dayofyear
+
+            # get the combo
+            combo = Transforms().get_station_satellite_combinations(period)[0]
+            # TODO: raise a warning if not length 1 above
+
+            # generate the path if it doesn't exist
+            Path(output_dir + "/" + combo + "/" + str(doy) + "/GAF/anomalous").mkdir(parents=True, exist_ok=True)
+            Path(output_dir + "/" + combo + "/" + str(doy) + "/GAF/normal").mkdir(parents=True, exist_ok=True)
+
+            # convert to seconds of the day for later annotation
+            period["sod"] = (period.index.hour * 60 + period.index.minute) * 60 + period.index.second
+
+            # get the satellite
+            sat = combo.split("__")[1]
+
+            # get the start time of the sat and the end time
+            anom_range = [labels[sat], labels[sat] + (event_size * 60)]
+
+            # process all the windows
+            for idx in list(range(period.shape[0])):
+
+                # get subsetted window
+                subset = period.iloc[idx:idx + window_size, :]
+
+                # if the data is smaller than the window size, do not process
+                if subset.shape[0] < window_size:
+                    pass
+
+                else:
+
+                    # now generate the field
+                    transformer = GramianAngularField()
+                    X_new = transformer.fit_transform(np.array([subset[combo]]))
+
+                    figure = plt.figure(figsize=(5, 5), frameon=False)
+
+                    ax = plt.Axes(figure, [0., 0., 1., 1.])
+                    ax.set_axis_off()
+                    figure.add_axes(ax)
+
+                    figure = plt.imshow(X_new[0], cmap='viridis', origin='lower')
+
+                    x_axis = figure.axes.get_xaxis()
+                    x_axis.set_visible(False)
+
+                    y_axis = figure.axes.get_yaxis()
+                    y_axis.set_visible(False)
+
+                    # save to a particular path based on if we are within the anomalous range
+                    if (idx + window_size) in list(range(anom_range[0], anom_range[1])):
+                        plt.savefig(output_dir + "/" + combo + "/" + str(doy) + "/GAF/anomalous/" + str(doy) + "_" + str(
+                            idx) + "_" + str(idx + window_size) + "_GAF.jpg")
+                    else:
+                        plt.savefig(
+                            output_dir + "/" + combo + "/" + str(doy) + "/GAF/normal/" + str(doy) + "_" + str(
+                                idx) + "_" + str(idx + window_size) + "_GAF.jpg")
+
+                    plt.close()
+
+
+
+
+    # NOTE: does not yet have a test because we need a transform.split_by_nan function
+
+    # def rescale_values(dataframe: pd.DataFrame, minimum: int = 0, maximum: int = 1,
+    #                    verbose: bool = True) -> pd.DataFrame:
+    #     """
+    #     Rescales the dStec/dt values on a scale from 0 to 1 or other scales common
+    #     to many analysis and modeling problems.
+    #     :param dataframe: a dataframe created by the read_day function that
+    #     contains dStec/dt values.
+    #     :param minimum: the minimum scale value, default 0.
+    #     :param maximum: the maximum scale value, default 1.
+    #     :param verbose: Dictates whether messages and progress bars are pushed to stdout.
+    #     :return: a dataframe identical to the input dataframe, but with
+    #     normalized values.
+    #     """
+    #
+    #     tqdm_out = TqdmToLogger(logger, level=logging.INFO)
+    #
+    #     for col in tqdm(dataframe.columns.values, file=tqdm_out, total=len(dataframe.columns.values), mininterval=3,
+    #                     disable=operator.not_(verbose)):
+    #         try:
+    #             if len(col.split("__")[1]) == 3:
+    #                 dataframe[col] = minmax_scale(X=dataframe[col], feature_range=(minimum, maximum))
+    #         except RuntimeWarning:
+    #             logger.warning(
+    #                 "Dataframe contained NaN values. Consider addressing and re-executing.", RuntimeWarning
+    #             )
+    #
+    #     return dataframe
 
     # TODO: image generating code here
