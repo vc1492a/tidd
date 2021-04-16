@@ -38,11 +38,14 @@ if __name__ == '__main__':
 
     print(df_all_days.shape)
 
-    # TODO: move the below
+    # TODO: move the below to new example file
     # get the combinations of ground stations and satelli r4tes
     combinations = Transforms().get_station_satellite_combinations(
         dataframe=df_all_days
     )
+
+    # we only have some combinations for testing
+    combinations = [x for x in combinations if "G20" in x]
 
     # select the first set of data as an example
     station_sat = combinations[0]
@@ -65,7 +68,7 @@ if __name__ == '__main__':
     Transforms().generate_images(
         events=events,
         labels=labels,
-        output_dir="",
+        output_dir=".",
         window_size=60,
         event_size=30,
         verbose=True

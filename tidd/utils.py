@@ -237,7 +237,7 @@ class Transforms:
     def generate_images(events: list, labels: dict, output_dir: Union[str, Path], window_size: int = 60,
                         event_size: int = 30, verbose: bool = True) -> None:
 
-        # TODO: add docstring
+        # TODO: add docstring and test in tests/
 
         # establish a logger
         tqdm_out = TqdmToLogger(logger, level=logging.INFO)
@@ -249,7 +249,7 @@ class Transforms:
 
             # get the combo
             combo = Transforms().get_station_satellite_combinations(period)[0]
-            # TODO: raise a warning if not length 1 above
+            # TODO: raise a warning if not length 1 above?
 
             # generate the path if it doesn't exist
             Path(output_dir + "/" + combo + "/" + str(doy) + "/GAF/anomalous").mkdir(parents=True, exist_ok=True)
@@ -262,7 +262,10 @@ class Transforms:
             sat = combo.split("__")[1]
 
             # get the start time of the sat and the end time
-            anom_range = [labels[sat], labels[sat] + (event_size * 60)]
+            try:
+                anom_range = [labels[str(doy)][sat], labels[str(doy)][sat] + (event_size * 60)]
+            except KeyError:
+                anom_range = [0, 1] # NOTE: assumes window size is never less than 3, may want userwarning
 
             # process all the windows
             for idx in list(range(period.shape[0])):
@@ -295,7 +298,7 @@ class Transforms:
                     y_axis.set_visible(False)
 
                     # save to a particular path based on if we are within the anomalous range
-                    if (idx + window_size) in list(range(anom_range[0], anom_range[1])):
+                    if (period.iloc[idx]["sod"] + window_size) in list(range(anom_range[0], anom_range[1])):
                         plt.savefig(output_dir + "/" + combo + "/" + str(doy) + "/GAF/anomalous/" + str(doy) + "_" + str(
                             idx) + "_" + str(idx + window_size) + "_GAF.jpg")
                     else:
@@ -305,37 +308,3 @@ class Transforms:
 
                     plt.close()
 
-
-
-
-    # NOTE: does not yet have a test because we need a transform.split_by_nan function
-
-    # def rescale_values(dataframe: pd.DataFrame, minimum: int = 0, maximum: int = 1,
-    #                    verbose: bool = True) -> pd.DataFrame:
-    #     """
-    #     Rescales the dStec/dt values on a scale from 0 to 1 or other scales common
-    #     to many analysis and modeling problems.
-    #     :param dataframe: a dataframe created by the read_day function that
-    #     contains dStec/dt values.
-    #     :param minimum: the minimum scale value, default 0.
-    #     :param maximum: the maximum scale value, default 1.
-    #     :param verbose: Dictates whether messages and progress bars are pushed to stdout.
-    #     :return: a dataframe identical to the input dataframe, but with
-    #     normalized values.
-    #     """
-    #
-    #     tqdm_out = TqdmToLogger(logger, level=logging.INFO)
-    #
-    #     for col in tqdm(dataframe.columns.values, file=tqdm_out, total=len(dataframe.columns.values), mininterval=3,
-    #                     disable=operator.not_(verbose)):
-    #         try:
-    #             if len(col.split("__")[1]) == 3:
-    #                 dataframe[col] = minmax_scale(X=dataframe[col], feature_range=(minimum, maximum))
-    #         except RuntimeWarning:
-    #             logger.warning(
-    #                 "Dataframe contained NaN values. Consider addressing and re-executing.", RuntimeWarning
-    #             )
-    #
-    #     return dataframe
-
-    # TODO: image generating code here
