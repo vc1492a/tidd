@@ -1,5 +1,4 @@
-# Toolkit for Ionospheric Disturbance 
-# Detection (TIDD)
+## Toolkit for Ionospheric Disturbance Detection (TIDD)
 
 The toolkit for the detection of Traveling Ionospheric Disturbances (TIDs) in the Earth's atmosphere as a result of 
 tsunami waves, earthquakes, large explosions and other phenomena. A collaboration between individuals and teams the 
