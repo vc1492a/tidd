@@ -8,6 +8,28 @@ NASA Jet Propulsion Laboratory (JPL), Sapienza University of Rome and the Univer
 [![Language](https://img.shields.io/badge/python-3.8-blue)](#)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
+## About 
+
+**Top-Down View of TIDs Detected by Satellite over Hawaii**
+![TIDs_hawaii](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/blob/main/images/geoplot_gopm_light.png)
+
+Tsunamis can trigger internal gravity waves (IGWs) that are able to propagate to the ionosphere, causing a perturbation in the natural Total Electron Content (TEC). 
+These perturbations are often referred as Traveling Ionospheric Disturbances (TIDs) and are easily detectable through 
+the Global Navigation Satellite System (GNSS) signal. The perturbation in the below image is generated 
+by a TID. 
+
+**GOPM Ground Station G07 Satellite sTEC data**
+![gopm G07 doy](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/blob/main/images/gopm_G07_doy.png)
+
+The large quantity of GNSS data currently available allows us to explore the possibility of using deep learning methods 
+for TID detection. This toolkit demonstrate the effectiveness of training a convolutional neural network (CNN) to 
+detect signs of IGWs. The approach utilized in this toolkit employs Gramian Angular Difference Fields (GADFs) to 
+encode the time-series as images for model training. 
+
+**Animation of GADFs over TIDs**
+![TIDs GADF](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/blob/main/images/anom.gif)
+
+
 ## Getting Started 
 
 First, setup a Python virtual environment in which to install project 
