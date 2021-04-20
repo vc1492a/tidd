@@ -18,17 +18,21 @@ These perturbations are often referred as Traveling Ionospheric Disturbances (TI
 the Global Navigation Satellite System (GNSS) signal. The perturbation in the below image is generated 
 by a TID. 
 
-**GOPM Ground Station G07 Satellite sTEC data**
+**GOPM Ground Station G07 Satellite slant Total Electron Content (sTEC) data**
 ![gopm G07 doy](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/blob/main/images/gopm_G07_doy.png)
 
 The large quantity of GNSS data currently available allows us to explore the possibility of using deep learning methods 
-for TID detection. This toolkit demonstrate the effectiveness of training a convolutional neural network (CNN) to 
+for TID detection. This toolkit demonstrates the effectiveness of training a convolutional neural network (CNN) to 
 detect signs of IGWs. The approach utilized in this toolkit employs Gramian Angular Difference Fields (GADFs) to 
 encode the time-series as images for model training. 
 
 **Animation of GADFs over TIDs**
 ![TIDs GADF](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/blob/main/images/anom.gif)
 
+In a real-time system, slant Total Electron Content (sTEC) may be calculated, windowed, converted 
+to an image using GADFs and fed into a model for predicting whether a TID is present and occurring. 
+Currently, simple experiments show conversion from float data to a prediction takes 
+approximately 1.1. seconds. 
 
 ## Getting Started 
 
@@ -98,12 +102,12 @@ data is available in the `chile` and `hawaii` directories. The data is also used
 ### About the Data
 
 In every folder, you find a file for each satellite in view from a GPS 
-station: so you have the value of the slant total electron content 
+station. The value of the slant total electron content 
 (sTEC) encountered by the GPS signal during its path in the ionosphere 
-from the satellite (e.g G10) to the GPS receiver (e.g ahup) for every 
-day.
+from the satellite (e.g G10) to the GPS receiver (e.g ahup) is available 
+for select days of the year.
 
-The files have 7 columns:
+The data files have 7 columns:
 - **Sod**: it represents the second of the day, it is my time array
 - **dStec/dt**: the variations in time of the slant total electron 
 content (the parameter of interest) epoch by epoch (it is like a velocity)
@@ -124,7 +128,7 @@ The day of the earthquake is 302. Data is available for days of year 290 through
 
 #### Chile 
 
-Day of year 259 is available. 
+Day of year 259 is available which is the day of the earthquake.
 
 ## Contributing
 
