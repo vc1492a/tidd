@@ -19,7 +19,6 @@ import os
 import pandas as pd
 from pathlib import Path
 from pyts.image import GramianAngularField
-from sklearn.preprocessing import minmax_scale
 import sys
 from tqdm import tqdm
 from typing import Union
@@ -197,7 +196,10 @@ class Data:
 
 class Transforms:
 
-    # TODO: split by nan function
+    """
+    Set of functions that applies transforms to the source data for use in modeling and
+    analysis.
+    """
 
     @staticmethod
     def get_station_satellite_combinations(dataframe: pd.DataFrame) -> list:
@@ -237,7 +239,17 @@ class Transforms:
     def generate_images(events: list, labels: dict, output_dir: Union[str, Path], window_size: int = 60,
                         event_size: int = 30, verbose: bool = True) -> None:
 
-        # TODO: add docstring and test in tests/
+        """
+        Generates images from windowed time-series data, specifically Gramnian Angular Difference Fields (GADFs).
+        :param events: A list of events (streams of time-series) to process into images.
+        :param labels: A dictionary of subject matter expert labels used to distinguish which time periods
+        are representative of anomalies (e.g. 302 - 6400 (second of day)).
+        :param output_dir: The path in which to export the generated images.
+        :param window_size: The window size (in minutes) to use for image generation. Default 60.
+        :param event_size: The event size (in minutes) to use in approximating the ending time. Default 30.
+        :param verbose: If true, show progress and other information.
+        :return: None
+        """
 
         # establish a logger
         tqdm_out = TqdmToLogger(logger, level=logging.INFO)
