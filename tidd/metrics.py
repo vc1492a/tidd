@@ -81,16 +81,16 @@ def recall_score(true_positive_count: int, false_negative_count: int) -> float:
     return recall
 
 
-def f1_score(precision_score: float, recall_score: float) -> float:
+def f1_score(precision: float, recall: float) -> float:
     """
     calculates the F1-score given a proviced precision score and recall score.
-    :input: precision score
-    :input: recall score
+    :input: precision
+    :input: recall
     """
 
     try:
-        f_score = 2 * ((precision_score * recall_score) / (precision_score +
-                                                           recall_score))
+        f_score = 2 * ((precision * recall) / (precision +
+                                                           recall))
     except ZeroDivisionError:
         f_score = 0.
 
