@@ -159,11 +159,7 @@ about code coverage.
 ### Versioning
 [Semantic versioning](http://semver.org/) is used for this project. 
 If contributing, please conform to semantic versioning guidelines when 
-submitting a pull request. 
-
-**NOTE**: Until relase to the [Python Package Index](https://pypi.org/) 
-(PyPI), we will be incrementing version numbers _prior to_ `0.1.x`. The 
-first release to the PyPI will be version `0.1`. 
+submitting a pull request.
 
 ### Updating the Changelog
 Core contributors are responsible for maintaining `changelog.md` in 
