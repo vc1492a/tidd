@@ -202,62 +202,70 @@ def test_transform_get_station_satellite_combinations(test_fixed_data) -> None:
     assert type(combinations[0]) == str
 
 
-# # TODO: fix below test. Works when ran as function but not as test not sure why.
-# def test_transform_generate_images(test_fixed_data) -> None:
-#     """
-#     Tests whether the image generation code runs and generates image files.
-#     :return: None
-#     """
-#
-#     # get the combinations of ground stations and satellites
-#     combinations = Transforms().get_station_satellite_combinations(
-#         dataframe=test_fixed_data
-#     )
-#
-#     # we only have some combinations for testing
-#     combinations = [x for x in combinations if "G20" in x]
-#
-#     # select the first set of data as an example
-#     station_sat = combinations[0]
-#     df_model = test_fixed_data.filter(regex=station_sat, axis=1).resample("1min").mean()  # resample by mean
-#
-#     # transform values by first getting the individual events
-#     min_sequence_length = 100
-#     events = Transforms().split_by_nan(
-#         dataframe=df_model,
-#         min_sequence_length=min_sequence_length
-#     )
-#
-#     # continue transforming by converting the float data into images
-#     with open("../data/experiments/proof_of_concept/hawaii/tid_start_times.json", "rb") as f_in:
-#         labels = json.load(f_in)
-#
-#     Transforms().generate_images(
-#         events=events,
-#         labels=labels,
-#         output_dir=".",
-#         window_size=60,
-#         event_size=30,
-#         verbose=True
-#     )
-#
-#     pth = os.path.dirname(os.path.realpath(__file__))
-#
-#     # get all the images
-#     images = list()
-#     for root, dirs, files in os.walk(pth):
-#         for file in files:
-#             if file.endswith(".jpg"):
-#                 images.append(os.path.join(root, file))
-#
-#     assert len(images) > 0
-#
-#     # check that both classes were generated
-#     classes = sorted(list(set([x.split("/")[-2] for x in images])))
-#     assert classes == ["anomalous", "normal"]
-#
-#     # find all directories
-#     directories = [x for x in os.listdir(pth) if os.path.isdir(x)]
-#
-#     # delete each directory
-#     [shutil.rmtree(x) for x in directories]
+@pytest.mark.filterwarnings('ignore::DeprecationWarning')
+def test_transform_generate_images(test_fixed_data) -> None:
+    """
+    Tests whether the image generation code runs and generates image files.
+    :return: None
+    """
+
+    # get the combinations of ground stations and satellites
+    combinations = Transforms().get_station_satellite_combinations(
+        dataframe=test_fixed_data
+    )
+
+    # we only have some combinations for testing
+    combinations = [x for x in combinations if "G20" in x]
+
+    # select the first set of data as an example
+    station_sat = combinations[0]
+    df_model = test_fixed_data.filter(regex=station_sat, axis=1).resample("1min").mean()  # resample by mean
+
+    # transform values by first getting the individual events
+    min_sequence_length = 100
+    events = Transforms().split_by_nan(
+        dataframe=df_model,
+        min_sequence_length=min_sequence_length
+    )
+
+    # continue transforming by converting the float data into images
+    labels = {
+        "302": {
+            "G04": 31400,
+            "G07": 31160,
+            "G08": 31900,
+            "G10": 29900,
+            "G20": 31150
+        }
+    }
+
+    pth = "./tests"
+
+    Transforms().generate_images(
+        events=events,
+        labels=labels,
+        output_dir=pth,
+        window_size=60,
+        event_size=30,
+        verbose=True
+    )
+
+    # get all the images
+    images = list()
+    for root, dirs, files in os.walk(pth):
+        for file in files:
+            if file.endswith(".jpg"):
+                images.append(os.path.join(root, file))
+
+    # check that some images were made
+    assert len(images) > 0
+
+    # check that both classes were generated
+    classes = sorted(list(set([x.split("/")[-2] for x in images])))
+    assert classes == ["anomalous", "normal"]
+
+    # find all image data directories
+    directories = [x[0] for x in os.walk(pth) if len(x[0].split("/")) == 3]
+
+    # delete each directory
+    [shutil.rmtree(x) for x in directories]

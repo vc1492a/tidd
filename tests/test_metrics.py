@@ -2,9 +2,6 @@
 set of unit tests for functionality within tidd/metrics.py
 """
 
-import pytest
-import random
-import numpy as np
 from tidd.metrics import *
 
 
@@ -17,8 +14,8 @@ def test_confusion_matrix_scores() -> None:
     # creating the confusion matrix with random numbers
     random_confusion_matrix = np.random.randint(0, 1000, size=(2, 2))
     scores = confusion_matrix_scores(random_confusion_matrix)
-    
-    # check we have a 4 tuple 
+
+    # check we have a 4 tuple
     assert len(scores) == 4
 
     # checking that the calculations work
@@ -28,6 +25,7 @@ def test_confusion_matrix_scores() -> None:
     known_values = np.array([[1, 1], [1, 1]])
     scores_from_known_matrix = confusion_matrix_scores(known_values)
     assert all(x == 0.5 for x in scores_from_known_matrix)
+
 
 def test_calculating_coverage() -> None:
     """
@@ -54,6 +52,7 @@ def test_calculating_coverage() -> None:
     assert len(return_tuple_2) == 2
     assert return_tuple_2[0] == 1
 
+
 def test_recall() -> None:
     """
     Test the metrics functions
@@ -76,7 +75,6 @@ def test_precision() -> None:
 
     precision2 = precision_score(0, 0)
     assert precision2 == 0
-
 
 
 def test_f1() -> None:
