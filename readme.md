@@ -150,7 +150,7 @@ When contributing, please ensure to run unit tests and add additional tests as
 necessary if adding new functionality. To run the unit tests, use `pytest`: 
 
 ```
-python3 -m pytest --cov=tidd -vv
+python -m  pytest --cov=tidd --capture=no --log-cli-level=CRITICAL
 ```
 
 This should report the result of your unit tests as well as information 
