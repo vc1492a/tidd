@@ -1,3 +1,13 @@
+"""
+A collection of functions covering metrics:
+
+- Calculating a confusion matrix.
+- Calculating coverage.
+- Recall, precision, F1-Scores.
+
+"""
+
+# imports
 import numpy as np
 import torch
 
