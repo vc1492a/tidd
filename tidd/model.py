@@ -19,7 +19,7 @@ import logging
 from pathlib import Path
 import torch
 from typing import Union
-from tidd.metrics import confusion_matrix_scores
+from tidd.metrics import confusion_matrix_scores, calculating_coverage
 
 
 class Model:
@@ -103,7 +103,8 @@ class Experiment:
                  validation_data_path: Union[str, Path] = "./",
                  test_percent: float = 0.2,
                  parallel_gpus: bool = False,
-                 max_epochs: int = 50
+                 max_epochs: int = 50,
+                 coverage_threshold: float = 0.9 # TODO: add check to restrict to a number between [0, 1]
                  ) -> None:
 
         # TODO: add docstring
@@ -117,6 +118,7 @@ class Experiment:
         self.test_percent = test_percent
         self.parallel_gpus = parallel_gpus
         self.max_epochs = max_epochs
+        self.coverage_threshold = coverage_threshold
 
         # some to be filled
         self.dls = None
@@ -134,6 +136,7 @@ class Experiment:
 
         try:
             assert torch.cuda.is_available()
+            torch.cuda.set_device('cuda:' + str(self.cuda_device))
             self.exp.param("device_name", torch.cuda.get_device_name(self.cuda_device))
         except AssertionError:
             logging.warning("Specified CUDA device not available. No device_name experiment parameter sent.")
@@ -156,6 +159,7 @@ class Experiment:
         """
         Prepares the data for the experiment based on the Experiment and Model parameters.
         """
+
         self.dls = ImageDataLoaders.from_folder(
             self.training_data_path,
             item_tfms=Resize(224),
@@ -208,11 +212,11 @@ class Experiment:
         self.exp.metric("recall", results[2])
         self.exp.metric("F1 Score", results[3])
 
-        # TODO: calculate the coverage
-        # predictions, targets = self.model.learner.get_preds()  # by default uses validation set
-        # anom_cov, normal_cov = calculating_coverage(predictions, targets, coverage_threshold)
-        # self.exp.metric("anomaly coverage", anom_cov)
-        # self.exp.metric("normal coverage", normal_cov)
+        # calculate the coverage
+        predictions, targets = self.model.learner.get_preds()  # by default uses validation set
+        anom_cov, normal_cov = calculating_coverage(predictions, targets, self.coverage_threshold)
+        self.exp.metric("anomaly coverage", anom_cov)
+        self.exp.metric("normal coverage", normal_cov)
 
         # if verbose, show results
         if verbose is True:
@@ -221,9 +225,10 @@ class Experiment:
             interp.plot_top_losses(9, figsize=(15, 11))
             interp.plot_confusion_matrix(figsize=(4, 4), dpi=120)
 
-        # as part of the Experiment, perform an out-of-sample (OOS) validation of the results!
+        # TODO: as part of the Experiment, perform an out-of-sample (OOS) validation of the results!
 
-
+        # end the experiment
+        self.exp.end()
 
 
 
