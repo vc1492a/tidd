@@ -25,10 +25,10 @@ from tidd.metrics import confusion_matrix_scores, calculating_coverage
 class Model:
 
     """
-    # TODO: docstring
+    A class that instantiates a model for training and allows
+    use of the model for inference.
     """
 
-    # TODO: add typing for architecture
     def __init__(self,
                  architecture: fastai = resnet34,
                  batch_size: int = 256,
@@ -44,17 +44,25 @@ class Model:
         # some to be filled
         self.learner = None
 
-    # TODO: model train / fit function
-    def fit(self, max_epochs) -> None:
-        # TODO: docstring
+    def fit(self, max_epochs: int, verbose: bool = False, callbacks: list = None) -> None:
 
-        # train the model
-        self.learner.fit(
-            max_epochs,
-            lr=self.learning_rate,
-            # TODO: maybe in the future the callbacks get passed in separately
-            cbs=[
-                ShowGraphCallback(),
+        """
+        Trains the specified model for a specified number of maximum epochs.
+        Utilizes callbacks which save training information to CSV, reduce the
+        learning rate on loss plateau, and early stop the model training process
+        if performance is no longer improving when a specified list of callbacks
+        is not provided by the user.
+        :param max_epochs: The maximum number of epochs to train the model (default 50).
+        :param verbose: If true, graphs the model during training and plots the results
+        of the training process.
+        :callbacks param: A list of callbacks to be used during model training. By default, includes
+        CSVLogger, ReduceLROnPlateau, EarlyStoppingCallback, and SaveModelCallback.
+        :return: None
+        """
+
+        # define callbacks to use during model training
+        if callbacks is None:
+            callbacks = [
                 CSVLogger(),  # TODO: does this need a path?
                 #         ParamScheduler(sched),
                 ReduceLROnPlateau(
@@ -69,6 +77,15 @@ class Model:
                 ),
                 SaveModelCallback()
             ]
+
+        if verbose is True:
+            callbacks.append(ShowGraphCallback())
+
+        # train the model
+        self.learner.fit(
+            max_epochs,
+            lr=self.learning_rate,
+            cbs=callbacks
         )
 
     def export(self, export_path: Union[str, Path]) -> None:
@@ -192,12 +209,16 @@ class Experiment:
         self.exp.param("learning_rate", self.model.learning_rate)
         self.exp.param("epochs_max", self.max_epochs)
 
+    # def _out_of_sample(self):
+
+
+
     def run(self, verbose: bool = False) -> None:
 
         # TODO: docstring
 
         # train the model
-        self.model.fit(max_epochs=self.max_epochs)
+        self.model.fit(max_epochs=self.max_epochs, verbose=verbose)
 
         # interpret the results
         interp = ClassificationInterpretation.from_learner(self.model.learner)
