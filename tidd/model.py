@@ -121,7 +121,6 @@ class Experiment:
     setup: https://hyperdash.io/
     """
 
-    # TODO: add typing for model
     def __init__(self,
                  model: Model,
                  name: str = "tidd",
@@ -133,8 +132,6 @@ class Experiment:
                  max_epochs: int = 50,
                  coverage_threshold: float = 0.9 # TODO: add check to restrict to a number between [0, 1]
                  ) -> None:
-
-        # TODO: add docstring
 
         # use the name to establish a Hyperdash experiment
         self.model = model
@@ -184,7 +181,11 @@ class Experiment:
 
     def _set_data(self, verbose: bool = False) -> None:
         """
-        Prepares the data for the experiment based on the Experiment and Model parameters.
+        Prepares the data for the experiment based on the Experiment
+        and Model parameters.
+        :param verbose: When set to True, plots a small randomly-sampled
+        batch of the data loaded into the experiment.
+        :return: None
         """
 
         self.dls = ImageDataLoaders.from_folder(
@@ -202,6 +203,11 @@ class Experiment:
             self.dls.show_batch()
 
     def _set_model(self):
+        """
+        Prepares the model for the experiment based on the Experiment
+        and Model parameters.
+        :return: None
+        """
 
         self.model.learner = cnn_learner(
             self.dls,  # data
@@ -209,8 +215,8 @@ class Experiment:
             metrics=[error_rate, accuracy],  # metrics
             pretrained=False,  # whether or not to use transfer learning
             normalize=True,  # this function adds a Normalization transform to the dls
-            #     callback_fns=[]
-            opt_func=Adam  # SGD # optimizer
+            callback_fns=list(),
+            opt_func=self.model.optimization_function  # SGD # optimizer
         )
 
         # add the model parameters to the Hyperdash experiment
