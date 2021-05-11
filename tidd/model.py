@@ -64,7 +64,6 @@ class Model:
         if callbacks is None:
             callbacks = [
                 CSVLogger(),  # TODO: does this need a path?
-                #         ParamScheduler(sched),
                 ReduceLROnPlateau(
                     monitor='valid_loss',
                     min_delta=0.1,
@@ -89,18 +88,29 @@ class Model:
         )
 
     def export(self, export_path: Union[str, Path]) -> None:
+        """
+        Saves a model to local disk for later use.
+        :param export_path: The location in which to save the model.
+        :return: None
+        """
 
-        # TODO: docstring
-
-        # TODO: add exception handlers, checks for success
-        self.learner.export(export_path)
+        try:
+            self.learner.export(export_path)
+        except Exception as ex:
+            logging.warning(RuntimeWarning, str(ex))
 
     def load(self, import_path: Union[str, Path]) -> None:
+        """
+        Loads a model from local disk for use in inference and
+        other tasks.
+        :param import_path: The location in which to load the model from.
+        :return: None
+        """
 
-        # TODO: docstring
-
-        # TODO: add exception handlers, checks for success
-        self.learner = load_learner(import_path)
+        try:
+            self.learner = load_learner(import_path)
+        except Exception as ex:
+            logging.warning(RuntimeWarning, str(ex))
 
 
 class Experiment:
