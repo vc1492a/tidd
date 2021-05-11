@@ -227,11 +227,14 @@ class Experiment:
 
     # def _out_of_sample(self):
 
-
-
     def run(self, verbose: bool = False) -> None:
 
-        # TODO: docstring
+        """
+        Runs the Experiment according to the specified Experiment and Model
+        parameters.
+        :param verbose: If True, shows Model training information and loss curves and plots
+        results visually for interpretation.
+        """
 
         # train the model
         self.model.fit(max_epochs=self.max_epochs, verbose=verbose)
