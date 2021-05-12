@@ -632,7 +632,9 @@ class Experiment:
                     # now we need to load in the original data (float data) that contains the second of day
                     # and other data needed for visualization and metrics reporting
                     df = self.read_data(ground_station_name, sat_name)
-                    doy = str(df.index.iloc[0].dt.dayofyear) # assumes period is entirely contained within a day
+
+                    # get the day of year of the period for use with the ground truth
+                    doy = datetime.datetime.utcfromtimestamp(df.index.values[0].tolist() / 1e9).timetuple().tm_yday # assumes period is entirely contained within a day
 
                     # identify continuous periods as we do when we generate the images and prep the data
                     events = np.split(df, np.where(np.isnan(df))[0])
@@ -646,8 +648,8 @@ class Experiment:
                     # how early an anomaly was detected or the distance between false
                     # positives and labeled regions
                     ground_truth = [
-                        ground_truth_labels[doy][sat_name]["start"],
-                        ground_truth_labels[doy][sat_name]["finish"]
+                        ground_truth_labels[str(doy)][sat_name]["start"],
+                        ground_truth_labels[str(doy)][sat_name]["finish"]
                     ]
 
                     # for now assume events is length 1 # TODO fix later
