@@ -20,6 +20,7 @@ import logging
 import matplotlib.pyplot as plt
 import natsort
 import numpy as np
+import operator
 import os
 import pandas as pd
 from pathlib import Path
@@ -69,7 +70,7 @@ class Model:
         :param max_epochs: The maximum number of epochs to train the model (default 50).
         :param verbose: If true, graphs the model during training and plots the results
         of the training process.
-        :callbacks param: A list of callbacks to be used during model training. By default, includes
+        :param callbacks: A list of callbacks to be used during model training. By default, includes
         CSVLogger, ReduceLROnPlateau, EarlyStoppingCallback, and SaveModelCallback.
         :return: None
         """
@@ -236,7 +237,6 @@ class Experiment:
             metrics=[error_rate, accuracy],  # metrics
             pretrained=False,  # whether or not to use transfer learning
             normalize=True,  # this function adds a Normalization transform to the dls
-            callback_fns=list(),
             opt_func=self.model.optimization_function  # SGD # optimizer
         )
 
@@ -577,11 +577,11 @@ class Experiment:
 
             # get the directory paths for the validation set specified
             validation_directories = self._get_directories(
-                path=self.validation_data_path
+                dir_path=self.validation_data_path
             )
 
             # process each of the directories in the validation set
-            for d in tqdm(validation_directories, file=tqdm_out, total=len(validation_directories), mininterval=10):
+            for d in tqdm(validation_directories, file=tqdm_out, total=len(validation_directories), mininterval=10, disable=operator.not_(verbose)):
 
                 try:
 
