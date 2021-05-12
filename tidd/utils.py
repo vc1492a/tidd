@@ -236,6 +236,27 @@ class Transforms:
         return events
 
     @staticmethod
+    def group_consecutives(vals: list, step: int = 1) -> list:
+        """
+        Return list of consecutive lists of numbers from vals (number list).
+        https://stackoverflow.com/questions/7352684/how-to-find-the-groups-of-consecutive-elements-in-a-numpy-array
+        :param vals: A series of values.
+        :param step: The step size.
+        :return: a list of consecutive lists of numbers.
+        """
+        run = []
+        result = [run]
+        expect = None
+        for v in vals:
+            if (v == expect) or (expect is None):
+                run.append(v)
+            else:
+                run = [v]
+                result.append(run)
+            expect = v + step
+        return result
+
+    @staticmethod
     def generate_images(events: list, labels: dict, output_dir: Union[str, Path], window_size: int = 60,
                         event_size: int = 30, verbose: bool = True) -> None:
 
