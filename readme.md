@@ -1,6 +1,6 @@
 ## Toolkit for Ionospheric Disturbance Detection (TIDD)
 
-The toolkit for the detection of Traveling Ionospheric Disturbances (TIDs) in the Earth's atmosphere as a result of 
+A toolkit for the detection of Traveling Ionospheric Disturbances (TIDs) in the Earth's atmosphere as a result of 
 tsunami waves, earthquakes, large explosions and other phenomena. A collaboration between individuals and teams the 
 NASA Jet Propulsion Laboratory (JPL), Sapienza University of Rome and the University of California - Los Angeles (UCLA). 
 
