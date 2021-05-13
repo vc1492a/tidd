@@ -318,7 +318,7 @@ class Experiment:
     # TODO (cont): again just for validation.
 
     @staticmethod
-    def read_data(ground_station_name: str, sat_name: str) -> pd.DataFrame:
+    def _read_data(ground_station_name: str, sat_name: str) -> pd.DataFrame:
         """
         simple read data function that converts the txt data files into pandas dataframes
         :input ground_station_name:
@@ -327,6 +327,7 @@ class Experiment:
         """
         pass_id = ground_station_name + "__" + sat_name
         try:
+            # TODO: below is hard-coded - need to make dynamic
             sat = "../data/hawaii/2012/302/" + ground_station_name + "3020.12o_" + sat_name + ".txt"
 
             f = open(sat, 'r')
@@ -384,43 +385,8 @@ class Experiment:
         except Exception as ex:
             print(RuntimeWarning, str(ex))
 
-    # def _classify_sequence(self, image_file_paths: list) -> None:
-    #     """
-    #     # TODO:
-    #     """
-    #
-    #     # make predictions for all of the images from that day
-    #     # these were converted previously. In real world would need real-time conversion from float to image and
-    #     # then to classification
-    #     # for each image (window), predict and store the classification
-    #     window_start = 0
-    #     window_end = 60  # TODO: how to set dynamically?
-    #
-    #     for img in image_file_paths:
-    #
-    #         try:
-    #
-    #             # load in the image and predict the classification
-    #             prediction = self.model.learner.predict(img)
-    #
-    #             # store the classification and the window range
-    #             self.classification.append(prediction[0])
-    #             self.classification_confidence.append(np.max(prediction[2].cpu().detach().numpy()))
-    #
-    #             self.windows.append([window_start, window_end])
-    #             window_start += 1
-    #             window_end += 1
-    #         except Exception as e:
-    #
-    #             print("Error encountered when predicting!")
-    #             if e is KeyboardInterrupt:
-    #                 break
-    #
-    #         self.classification_bool = [0 if x == "normal" else 1 for x in self.classification]
-
     def _confusion_matrix_classification(self, adjusted_ground_truth_sequence: list,
-                                        anom_sequences: list,
-                                        ) -> tuple:
+                                         anom_sequences: list) -> tuple:
         """
         Records the total count of true positives, false negatives, and false positives
 
@@ -479,11 +445,14 @@ class Experiment:
 
     # TODO: move to plotting class / file
     @staticmethod
-    def _plot_distribution(tp_lengths: list, fp_lengths: list) -> None:
+    def _plot_distribution(tp_lengths: list, fp_lengths: list, save_path: Union[str, Path] = "./output") -> None:
         """
         creates the plot of visualizing the distribution of true and false positives
         :input: list of true positive sequences
         :input: list of false positive sequences
+
+        # TODO: update docstring
+
         """
         # first organize the data into a dataframe
         rows = list()
@@ -503,23 +472,24 @@ class Experiment:
         ax = sns.displot(df_sequence_lengths, x="sequence_length", hue="sequence_type", kde=True, multiple="stack",
                          palette=sns.color_palette(colors))
 
-        plt.show()
+        plt.savefig(save_path + "/classification_sequence_length_distribution.png")
 
     # TODO: move to plotting class / file
     @staticmethod
     def _plot_classification(event: pd.DataFrame,
-                            pass_id: str,
-                            sat_annotation: dict,
-                            classification_bool: list,
-                            classification_confidence: list
-                            ) -> None:
+                             pass_id: str,
+                             sat_annotation: dict,
+                             classification_bool: list,
+                             classification_confidence: list,
+                             save_path: Union[str, Path] = "./output"
+                             ) -> None:
         """
         Creates 3 plots
         Plot of the time series data with markings of the start and end of the anomalous sequence
         Plot of the predictions for each sequence 1 hour
         Plot of the confidence levels for each of the predictions
 
-        # TODO: update dosctring
+        # TODO: update docstring
 
         :input event: DataFrame containing the float data
         :input pass_id: string containing the satellite and ground station
@@ -561,7 +531,7 @@ class Experiment:
                             wspace=0.2,
                             hspace=0.5)
 
-        plt.show()
+        plt.show(save_path + "/" + pass_id + "_classification_plot.png")
 
     # TODO:
     def _out_of_sample(self, ground_truth_labels: dict, verbose: bool = False, save_path: Union[str, Path] = None) -> None:
@@ -631,7 +601,7 @@ class Experiment:
 
                     # now we need to load in the original data (float data) that contains the second of day
                     # and other data needed for visualization and metrics reporting
-                    df = self.read_data(ground_station_name, sat_name)
+                    df = self._read_data(ground_station_name, sat_name)
 
                     # get the day of year of the period for use with the ground truth
                     doy = datetime.datetime.utcfromtimestamp(df.index.values[0].tolist() / 1e9).timetuple().tm_yday # assumes period is entirely contained within a day
@@ -694,9 +664,9 @@ class Experiment:
                             save_df = event.iloc[59:].copy()
                             save_df['anomaly'] = classification_bool
                             save_df['confidence'] = classification_confidence
-                            save_df.to_csv(save_path + pass_id + '_results.csv')
+                            save_df.to_csv(save_path + "/" + pass_id + '_results.csv')
                         except FileNotFoundError:
-                            print('Save Path "' + save_path + pass_id + '_results.csv' + '" not valid')
+                            print('Save Path "' + save_path + "/" + pass_id + '_results.csv' + '" not valid')
 
                 except Exception as e:
 
