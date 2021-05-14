@@ -78,7 +78,9 @@ class Model:
         # define callbacks to use during model training
         if callbacks is None:
             callbacks = [
-                CSVLogger(),  # TODO: does this need a path?
+                CSVLogger(
+                    fname="../"
+                ),  # TODO: does this need a path?
                 ReduceLROnPlateau(
                     monitor='valid_loss',
                     min_delta=0.1,
@@ -237,7 +239,8 @@ class Experiment:
             metrics=[error_rate, accuracy],  # metrics
             pretrained=False,  # whether or not to use transfer learning
             normalize=True,  # this function adds a Normalization transform to the dls
-            opt_func=self.model.optimization_function  # SGD # optimizer
+            opt_func=self.model.optimization_function  # SGD # optimizer,
+            # model_dir="" # TODO
         )
 
         # add the model parameters to the Hyperdash experiment
@@ -535,6 +538,9 @@ class Experiment:
 
     # TODO:
     def _out_of_sample(self, ground_truth_labels: dict, verbose: bool = False, save_path: Union[str, Path] = None) -> None:
+
+        # create the save_path dir if it doesn't exist
+        Path(save_path).mkdir(parents=True, exist_ok=True)
 
         # establish a logger
         tqdm_out = TqdmToLogger(logger, level=logging.INFO)
