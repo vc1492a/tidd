@@ -534,7 +534,7 @@ class Experiment:
                             wspace=0.2,
                             hspace=0.5)
 
-        plt.show(save_path + "/" + pass_id + "_classification_plot.png")
+        plt.savefig(save_path + "/" + pass_id + "_classification_plot.png")
 
     # TODO:
     def _out_of_sample(self, ground_truth_labels: dict, verbose: bool = False, save_path: Union[str, Path] = None) -> None:
