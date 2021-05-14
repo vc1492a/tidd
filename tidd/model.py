@@ -78,9 +78,7 @@ class Model:
         # define callbacks to use during model training
         if callbacks is None:
             callbacks = [
-                CSVLogger(
-                    fname="../"
-                ),  # TODO: does this need a path?
+                CSVLogger(),  # TODO: does this need a path?
                 ReduceLROnPlateau(
                     monitor='valid_loss',
                     min_delta=0.1,
@@ -537,7 +535,7 @@ class Experiment:
         plt.savefig(save_path + "/" + pass_id + "_classification_plot.png")
 
     # TODO:
-    def _out_of_sample(self, ground_truth_labels: dict, verbose: bool = False, save_path: Union[str, Path] = None) -> None:
+    def _out_of_sample(self, ground_truth_labels: dict, verbose: bool = False, save_path: Union[str, Path] = "./output") -> None:
 
         # create the save_path dir if it doesn't exist
         Path(save_path).mkdir(parents=True, exist_ok=True)
@@ -702,7 +700,7 @@ class Experiment:
             if verbose is True:
                 self._plot_distribution(self.tp_lengths, self.fp_lengths)
 
-    def run(self, ground_truth_labels: dict, verbose: bool = False, save_path: Union[str, Path] = None) -> None:
+    def run(self, ground_truth_labels: dict, verbose: bool = False, save_path: Union[str, Path] = "./output") -> None:
 
         """
         Runs the Experiment according to the specified Experiment and Model
