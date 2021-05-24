@@ -258,7 +258,7 @@ class Transforms:
 
     @staticmethod
     def generate_images(events: list, labels: dict, output_dir: Union[str, Path], window_size: int = 60,
-                        event_size: int = 30, verbose: bool = True) -> None:
+                        verbose: bool = True) -> None:
 
         """
         Generates images from windowed time-series data, specifically Gramnian Angular Difference Fields (GADFs).
@@ -267,7 +267,6 @@ class Transforms:
         are representative of anomalies (e.g. 302 - 6400 (second of day)).
         :param output_dir: The path in which to export the generated images.
         :param window_size: The window size (in minutes) to use for image generation. Default 60.
-        :param event_size: The event size (in minutes) to use in approximating the ending time. Default 30.
         :param verbose: If true, show progress and other information.
         :return: None
         """
@@ -285,8 +284,8 @@ class Transforms:
             # TODO: raise a warning if not length 1 above?
 
             # generate the path if it doesn't exist
-            Path(output_dir + "/" + combo + "/" + str(doy) + "/GAF/anomalous").mkdir(parents=True, exist_ok=True)
-            Path(output_dir + "/" + combo + "/" + str(doy) + "/GAF/normal").mkdir(parents=True, exist_ok=True)
+            Path(output_dir + "/" + combo + "/labeled/anomalous").mkdir(parents=True, exist_ok=True)
+            Path(output_dir + "/" + combo + "/labeled/normal").mkdir(parents=True, exist_ok=True)
 
             # convert to seconds of the day for later annotation
             period["sod"] = (period.index.hour * 60 + period.index.minute) * 60 + period.index.second
@@ -296,7 +295,7 @@ class Transforms:
 
             # get the start time of the sat and the end time
             try:
-                anom_range = [labels[str(doy)][sat], labels[str(doy)][sat] + (event_size * 60)]
+                anom_range = [labels[str(doy)][sat]["start"], labels[str(doy)][sat]["finish"]]
             except KeyError:
                 anom_range = [0, 1] # NOTE: assumes window size is never less than 3, may want userwarning
 
@@ -332,11 +331,11 @@ class Transforms:
 
                     # save to a particular path based on if we are within the anomalous range
                     if (period.iloc[idx]["sod"] + window_size) in list(range(anom_range[0], anom_range[1])):
-                        plt.savefig(output_dir + "/" + combo + "/" + str(doy) + "/GAF/anomalous/" + str(doy) + "_" + str(
+                        plt.savefig(output_dir + "/" + combo + "/labeled/anomalous/" + str(doy) + "_" + str(
                             idx) + "_" + str(idx + window_size) + "_GAF.jpg")
                     else:
                         plt.savefig(
-                            output_dir + "/" + combo + "/" + str(doy) + "/GAF/normal/" + str(doy) + "_" + str(
+                            output_dir + "/" + combo + "/labeled/normal/" + str(doy) + "_" + str(
                                 idx) + "_" + str(idx + window_size) + "_GAF.jpg")
 
                     plt.close()
