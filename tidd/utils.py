@@ -12,6 +12,7 @@ import pandas as pd
 from pathlib import Path
 from pyts.image import GramianAngularField
 import sys
+from tidd.plotting import gramian_angular_field
 from tqdm import tqdm
 from typing import List, Union
 
@@ -40,32 +41,6 @@ class TqdmToLogger(io.StringIO):
 
     def flush(self):
         self.logger.log(self.level, self.buf)
-
-
-class Plot:
-
-    @staticmethod
-    def gramian_angular_field(array: Union[pd.Series, np.array, list]) -> plt.figure:
-
-        """
-        # TODO:
-        """
-
-        figure = plt.figure(figsize=(5, 5), frameon=False)
-
-        ax = plt.Axes(figure, [0., 0., 1., 1.])
-        ax.set_axis_off()
-        figure.add_axes(ax)
-
-        figure = plt.imshow(array[0], cmap='viridis', origin='lower')
-
-        x_axis = figure.axes.get_xaxis()
-        x_axis.set_visible(False)
-
-        y_axis = figure.axes.get_yaxis()
-        y_axis.set_visible(False)
-
-        return figure
 
 
 class Transform:
@@ -194,7 +169,7 @@ class Transform:
                     )
 
                     # plot and save
-                    ax = Plot.gramian_angular_field(
+                    ax = gramian_angular_field(
                         X_new
                     )
 
