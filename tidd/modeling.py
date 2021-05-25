@@ -178,13 +178,12 @@ class Experiment:
         # if generate data is true, create images otherwise point to source data
         if self.generate_data is True:
 
-            Data.prepare_training_validation_data(
+            self.training_data_path, self.validation_data_path = Data.prepare_training_validation_data(
                 experiment_name=self.name,
                 training_data_paths=training_data_paths,
                 validation_data_paths=validation_data_paths,
                 window_size=window_size
             )
-
 
 
 

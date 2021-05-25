@@ -336,7 +336,7 @@ class Data:
                                          training_data_paths: List[Union[str, Path]] = ["./"],
                                          validation_data_paths: List[Union[str, Path]] = None,
                                          window_size: int = 60
-                                         ):
+                                         ) -> list:
 
         """
         # TODO:
@@ -381,6 +381,16 @@ class Data:
         with pool as pp:
 
             # labels are only generated for those which contain labeled data
-            with tqdm(file=tqdm_out, total=len(all_paths_flat), mininterval=10) as pbar:
+            with tqdm(file=tqdm_out, total=len(path_objects), mininterval=10) as pbar:
                 for i, _ in enumerate(pp.imap_unordered(Data()._pipe_prepare_training_validation_data, path_objects)):
                     pbar.update()
+
+        logging.info(training_data_paths[-1])
+
+        training_data_path = "/".join(training_data_paths[-1].split("/")[:-1]) + "/experiments/" + experiment_name + "/train"
+        validation_data_path = None
+        if validation_data_paths is not None:
+            validation_data_path = "/".join(validation_data_paths[-1].split("/")[:-1]) + "/experiments/" + experiment_name  + "/validation"
+
+        return [training_data_path, validation_data_path]
+
