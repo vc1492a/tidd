@@ -343,7 +343,7 @@ class Data:
 
         # gather all file paths and process rapidly in parallel
         all_paths = [paths[p]["file_paths"] for p in paths]
-        all_paths_flat = [item for sublist in all_paths for item in sublist][0:50]
+        all_paths_flat = [item for sublist in all_paths for item in sublist]
 
         # for each of the file paths, create a tuple containing the name
         # of the experiment, the file path, and the labeled data
