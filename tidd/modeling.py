@@ -26,7 +26,7 @@ from pathlib import Path
 import seaborn as sns
 import sys
 from tidd.metrics import confusion_matrix_scores, calculating_coverage, precision_score, recall_score, f1_score
-from tidd.utils_old import Transforms, TqdmToLogger
+from tidd.utils import Data, TqdmToLogger
 import torch
 from tqdm import tqdm
 from typing import List, Union
@@ -176,7 +176,15 @@ class Experiment:
         logging.info(" ----------------------------------------------------\n")
 
         # if generate data is true, create images otherwise point to source data
-        # if self.generate_data is True:
+        if self.generate_data is True:
+
+            Data.prepare_training_validation_data(
+                experiment_name=self.name,
+                training_data_paths=training_data_paths,
+                validation_data_paths=validation_data_paths,
+                window_size=window_size
+            )
+
 
 
 
