@@ -148,6 +148,7 @@ class Experiment:
                  cuda_device: int = torch.cuda.current_device(),
                  training_data_paths: Union[str, Path] = "./",
                  validation_data_paths: Union[str, Path] = "./",
+                 save_path: Union[str, Path] = "./",
                  test_percent: float = 0.2,
                  parallel_gpus: bool = False,
                  max_epochs: int = 50,
@@ -159,8 +160,8 @@ class Experiment:
         self.model = model
         self.exp = HyperdashExperiment(name)
         self.cuda_device = cuda_device
-        self.training_data_path = training_data_path
-        self.validation_data_path = validation_data_path
+        self.training_data_path = training_data_paths
+        self.validation_data_path = validation_data_paths
         self.test_percent = test_percent
         self.parallel_gpus = parallel_gpus
         self.max_epochs = max_epochs
