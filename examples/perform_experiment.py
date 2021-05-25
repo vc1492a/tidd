@@ -31,4 +31,9 @@ E = Experiment(
     generate_data=True # when true, uses paths params for raw. When false, uses paths params to mark imaged data.
 )
 
+# # run an experiment
+# E.run(
+#     verbose=True,
+#     save_path="/home/vconstan/projects/tidd/output"
+# )
 
