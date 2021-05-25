@@ -385,8 +385,6 @@ class Data:
                 for i, _ in enumerate(pp.imap_unordered(Data()._pipe_prepare_training_validation_data, path_objects)):
                     pbar.update()
 
-        logging.info(training_data_paths[-1])
-
         training_data_path = "/".join(training_data_paths[-1].split("/")[:-1]) + "/experiments/" + experiment_name + "/train"
         validation_data_path = None
         if validation_data_paths is not None:
