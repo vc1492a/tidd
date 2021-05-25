@@ -42,6 +42,7 @@ class Model:
     """
     A class that instantiates a model for training and allows
     use of the model for inference.
+
     """
 
     def __init__(self,
@@ -128,6 +129,11 @@ class Model:
             logging.warning(RuntimeWarning, str(ex))
 
 
+    def _predict(self, path: str):
+
+        return 
+
+
 class Experiment:
 
     """
@@ -160,6 +166,11 @@ class Experiment:
         self.max_epochs = max_epochs
         self.coverage_threshold = coverage_threshold
         self.window_size = window_size
+
+         # create the save_path dir if it doesn't exist
+        Path(save_path).mkdir(parents=True, exist_ok=True)
+        
+        self.save_path = save_path
 
         # some to be filled
         self.dls = None
@@ -231,14 +242,17 @@ class Experiment:
         :return: None
         """
 
+        save_path = self.save_path + '/' + 'model_output'
+        Path(save_path).mkdir(parents=True, exist_ok=True) 
+
         self.model.learner = cnn_learner(
             self.dls,  # data
             self.model.architecture,  # architecture
+            path= save_path, # path for which to store the history.csv, models
             metrics=[error_rate, accuracy],  # metrics
             pretrained=False,  # whether or not to use transfer learning
             normalize=True,  # this function adds a Normalization transform to the dls
-            opt_func=self.model.optimization_function  # SGD # optimizer,
-            # model_dir="" # TODO
+            opt_func=self.model.optimization_function  # SGD # optimizer
         )
 
         # add the model parameters to the Hyperdash experiment
@@ -386,6 +400,7 @@ class Experiment:
         except Exception as ex:
             print(RuntimeWarning, str(ex))
 
+    # TODO: migrate this to metrics file?
     def _confusion_matrix_classification(self, adjusted_ground_truth_sequence: list,
                                          anom_sequences: list) -> tuple:
         """
@@ -451,6 +466,7 @@ class Experiment:
         creates the plot of visualizing the distribution of true and false positives
         :input: list of true positive sequences
         :input: list of false positive sequences
+        :input save_path: place where to save the image of the plot
 
         # TODO: update docstring
 
@@ -494,9 +510,10 @@ class Experiment:
 
         :input event: DataFrame containing the float data
         :input pass_id: string containing the satellite and ground station
-        :input sod_annotation: integer representing the start of the anomalous sequence
+        :input sat_annotation: dictionary containing the start and end of the anomalous sequence
         :input classification_bool: classification of each time step
         :input classification_confidence: confidence of the classification at each time step
+        :input save_path: path where the plot images need to be saved
         """
         # combined "detection evaluation" plot
         fig, axs = plt.subplots(3, sharex=False, sharey=False, figsize=(12, 4))
@@ -534,12 +551,14 @@ class Experiment:
 
         plt.savefig(save_path + "/" + pass_id + "_classification_plot.png")
 
+        plt.close(fig)
+
     # TODO:
-    def _out_of_sample(self, ground_truth_labels: dict, verbose: bool = False, save_path: Union[str, Path] = "./output") -> None:
+    def _out_of_sample(self, ground_truth_labels: dict, verbose: bool = False) -> None:
 
-        # create the save_path dir if it doesn't exist
-        Path(save_path).mkdir(parents=True, exist_ok=True)
-
+       
+        save_path = self.save_path + '/' + 'out_of_sample'
+        Path(save_path).mkdir(parents=True, exist_ok=True) 
         # establish a logger
         tqdm_out = TqdmToLogger(logger, level=logging.INFO)
 
@@ -575,6 +594,8 @@ class Experiment:
                     windows = list()
                     window_start = 0
                     window_end = 60 # TODO: hard coded currently, make dynamic
+
+                    # TODO: maybe abstract this accordingly 
                     for img in image_files:
 
                         try:
@@ -649,20 +670,22 @@ class Experiment:
                     )
 
                     self.tp += tp
-                    self.fn += fn
+                    self.fn += fn 
                     self.fp += fp
 
                     # make pretty plots!
+                    # TODO:
                     if verbose:
                         self._plot_classification(
                             events[0],
                             pass_id,
-                            ground_truth_labels[sat_name],
+                            ground_truth_labels[str(doy)][sat_name],
                             classification_bool,
-                            classification_confidence
+                            classification_confidence,
+                            save_path=save_path
                         )
 
-                    if save_path is not None:
+                    if self.save_path is not None:
                         print('Saving File of: ', pass_id)
                         try:
                             save_df = event.iloc[59:].copy()
@@ -698,9 +721,9 @@ class Experiment:
 
             # if verbose, plot the distribution of the sequence lengths
             if verbose is True:
-                self._plot_distribution(self.tp_lengths, self.fp_lengths)
+                self._plot_distribution(self.tp_lengths, self.fp_lengths, save_path)
 
-    def run(self, ground_truth_labels: dict, verbose: bool = False, save_path: Union[str, Path] = "./output") -> None:
+    def run(self, ground_truth_labels: dict, verbose: bool = False) -> None:
 
         """
         Runs the Experiment according to the specified Experiment and Model
@@ -709,7 +732,6 @@ class Experiment:
         end times (in second of day format) for specific days of the year and satellites.
         :param verbose: If True, shows Model training information and loss curves and plots
         results visually for interpretation.
-        :param save_path: A specified file path in which to save Experiment artifacts.
         :return: None
         """
 
@@ -721,7 +743,7 @@ class Experiment:
 
         cm = interp.confusion_matrix()
 
-        results = confusion_matrix_scores(cm)
+        results = confusion_matrix_scores(cm) 
 
         # track results in the Hyperdash experiment
         self.exp.metric("accuracy", results[0])
@@ -734,18 +756,21 @@ class Experiment:
         anom_cov, normal_cov = calculating_coverage(predictions, targets, self.coverage_threshold)
         self.exp.metric("anomaly coverage", anom_cov)
         self.exp.metric("normal coverage", normal_cov)
-
+  
         # if verbose, show results
         if verbose is True:
 
             # plot the results
+            # TODO: Save these plots?
             interp.plot_top_losses(9, figsize=(15, 11))
             interp.plot_confusion_matrix(figsize=(4, 4), dpi=120)
+
+        self.model.export('final_model.pth')
 
         # as part of the Experiment, perform an out-of-sample (OOS) validation of the results
         self._out_of_sample(
             ground_truth_labels=ground_truth_labels,
-            save_path=save_path
+            verbose=verbose
         )
 
         # end the experiment
