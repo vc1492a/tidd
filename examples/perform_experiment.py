@@ -24,11 +24,12 @@ E = Experiment(
     name="tidd-test",
     model=M,
     training_data_paths=training_data_paths,
-    # validation_data_paths=validation_data_paths, # optional, when ignored does not perform / allow Out of Sample
+    validation_data_paths=validation_data_paths, # optional, when ignored does not perform / allow Out of Sample
     share_testing=0.2,
     parallel_gpus=False,
     max_epochs=50,
-    generate_data=True # when true, uses paths params for raw. When false, uses paths params to mark imaged data.
+    generate_data=True, # when true, uses paths params for raw. When false, uses paths params to mark imaged data.
+    save_path="../output"
 )
 
 # # run an experiment

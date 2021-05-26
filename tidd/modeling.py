@@ -147,7 +147,8 @@ class Experiment:
                  share_testing: float = 0.2,
                  parallel_gpus: bool = False,
                  max_epochs: int = 50,
-                 window_size: int = 60
+                 window_size: int = 60,
+                 save_path: Union[str, Path] = "./"
                  ) -> None:
 
         # use the name to establish a Hyperdash experiment
@@ -162,6 +163,10 @@ class Experiment:
         self.parallel_gpus = parallel_gpus
         self.max_epochs = max_epochs
         self.window_size = window_size
+
+        # create the save_path dir if it doesn't exist
+        Path(save_path).mkdir(parents=True, exist_ok=True)
+        self.save_path = save_path
 
         # print some information
         logging.info(" ----------------------------------------------------")
@@ -257,6 +262,9 @@ class Experiment:
         :return: None
         """
 
+        save_path = self.save_path + '/' + 'model_output'
+        Path(save_path).mkdir(parents=True, exist_ok=True)
+
         self.model.learner = cnn_learner(
             self.dls,  # data
             self.model.architecture,  # architecture
@@ -315,8 +323,7 @@ class Experiment:
 
         # TODO: # # as part of the Experiment, perform an out-of-sample (OOS) validation of the results
         # self._out_of_sample(
-        #     ground_truth_labels=ground_truth_labels,
-        #     save_path=save_path
+        #     save_path=save_path #
         # )
 
         # end the experiment
