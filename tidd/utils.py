@@ -202,24 +202,22 @@ class Data:
     # TODO:
     """
 
-    # def read_data_from_file(self, ):
-
     # def read_image_from_file(self):
 
     @staticmethod
-    def read_data_from_file(satellite_name: Union[str, Path]) -> pd.DataFrame:
+    def read_data_from_file(file_name: Union[str, Path]) -> pd.DataFrame:
 
         """
         For a given satellite, reads in the satellite and returns a Pandas DataFrame.
-        :param satellite_name: the name of the satellite.
+        :param file_name: the name of the file.
         :return: a Pandas DataFrame containing the data for this particular satellite / set of data.
         """
 
-        sat_name = str(satellite_name).split("/")[-1].split(".")[0][:4]
-        ground_station_name = str(satellite_name).split("_")[-1].split(".")[0]
+        sat_name = str(file_name).split("/")[-1].split(".")[0][:4]
+        ground_station_name = str(file_name).split("_")[-1].split(".")[0]
         pass_id = sat_name + "__" + ground_station_name
 
-        f = open(satellite_name, 'r')
+        f = open(file_name, 'r')
         line1 = f.readline()
         line1 = line1.replace('#', '').replace("dsTEC/dt [TECU/s]", "dsTEC/dt").replace("elev", "ele")
         rename_cols = line1.split()
@@ -235,7 +233,7 @@ class Data:
         new_cols = ["sod"] + new_cols
 
         df = pd.read_table(
-            satellite_name,
+            file_name,
             index_col='sod',
             sep="\t\t| ",
             names=new_cols,
@@ -320,11 +318,14 @@ class Data:
         # assign types for later differentiation
         paths = dict()
         paths_to_process = training_data_paths
-        if validation_data_paths is not None:
-            [paths_to_process.append(v) for v in validation_data_paths]
-        for p in paths_to_process:
+        for p in training_data_paths:
             paths[p] = {"type": "train", "file_paths": list(),
                         "labels": json.load(open(p + "/tid_start_finish_times.json", "rb"))}
+        if validation_data_paths is not None:
+            [paths_to_process.append(v) for v in validation_data_paths]
+            for p in validation_data_paths:
+                paths[p] = {"type": "validation", "file_paths": list(),
+                            "labels": json.load(open(p + "/tid_start_finish_times.json", "rb"))}
 
         # gather all file paths for processing
         #  first gather all the file paths
