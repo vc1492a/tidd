@@ -281,6 +281,132 @@ class Experiment:
         self.exp.param("learning_rate", self.model.learning_rate)
         self.exp.param("epochs_max", self.max_epochs)
 
+    def _out_of_sample(self, verbose: bool = False) -> None:
+
+        """
+        # TODO
+        """
+
+        # define the save path for the out of sample output and make sure the path exists
+        save_path = self.save_path + '/' + 'out_of_sample'
+        Path(save_path).mkdir(parents=True, exist_ok=True)
+
+        # subdue the progress bar as to not clog the stdout / cell output
+        with self.model.learner.no_bar():
+            # disable logging
+            self.model.learner.no_logging()
+
+            # get the directories at the specified path
+            validation_directories = [
+                d for d in os.listdir(self.validation_data_path) if os.path.isdir(self.validation_data_path + '/' + d)
+            ]
+
+            # establish a logger
+            tqdm_out = TqdmToLogger(logger, level=logging.INFO)
+
+            # TODO (future work): parallel process the below
+            # process each of the directories in the validation set
+            for d in tqdm(validation_directories, file=tqdm_out, total=len(validation_directories), mininterval=10,
+                          disable=operator.not_(verbose)):
+
+                # error capturing
+                try:
+
+                    logging.info(d)
+
+                    # TODO: for each labeled day of year and satellite, get matching from validation_directories
+
+                    # NOTE: start predict_sequence
+                    # some setup
+                    classification = list()
+                    classification_confidence = list()
+                    windows = list()
+                    window_start = 0
+                    window_end = self.window_size
+
+                    # TODO: call predict sequence function that replaces the below
+                    # for img in image_files:
+                    #
+                    #     try:
+                    #
+                    #         # load in the image and predict the classification
+                    #         prediction = self.model.learner.predict(img)
+                    #
+                    #         # store the classification and the window range
+                    #         classification.append(prediction[0])
+                    #         classification_confidence.append(np.max(prediction[2].cpu().detach().numpy()))
+                    #
+                    #         windows.append([window_start, window_end])
+                    #         window_start += 1
+                    #         window_end += 1
+                    #     except Exception as e:
+                    #
+                    #         print("Error encountered when predicting!")
+                    #         if e is KeyboardInterrupt:
+                    #             break
+
+                    # generate boolean classification
+                    classification_bool = [0 if x == "normal" else 1 for x in classification]
+                    # NOTE: end predict_sequence function
+
+                    # NOTE: start generate ground truth sequences function
+                    # TODO: utilize functions in Data class to read data from file
+                    # # now we need to load in the original data (float data) that contains the second of day
+                    # # and other data needed for visualization and metrics reporting
+                    # df = self._read_data(ground_station_name, sat_name)
+                    #
+                    # # get the day of year of the period for use with the ground truth
+                    # doy = datetime.datetime.utcfromtimestamp(df.index.values[
+                    #                                              0].tolist() / 1e9).timetuple().tm_yday  # assumes period is entirely contained within a day
+                    #
+                    # # identify continuous periods as we do when we generate the images and prep the data
+                    # events = np.split(df, np.where(np.isnan(df))[0])
+                    # events = [ev[~np.isnan(ev)] for ev in events if not isinstance(ev, np.ndarray)]
+                    # events = [ev.dropna() for ev in events if
+                    #           not ev.empty and ev.shape[0] > 100]  # NOTE: 100 minute filter to remove short periods
+                    #
+                    # # like the code that generates the "events", we will determine the predicted
+                    # # sequence of anomalies and record whether or not they are true positives
+                    #
+                    # # For simplicity, we do not make scoring adjustments based on
+                    # # how early an anomaly was detected or the distance between false
+                    # # positives and labeled regions
+                    # ground_truth = [
+                    #     ground_truth_labels[str(doy)][sat_name]["start"],
+                    #     ground_truth_labels[str(doy)][sat_name]["finish"]
+                    # ]
+                    #
+                    # # for now assume events is length 1 # TODO fix later
+                    # event = events[0].reset_index()
+                    #
+                    # ground_truth_sequence = event[
+                    #     (event["sod"] >= ground_truth[0]) & (event["sod"] <= ground_truth[1])].index.values
+                    #
+                    # # adjust the sequence for the window size used earlier tp generate the images
+                    # # TODO: hard coded, make dynamic
+                    # adjusted_ground_truth_sequence = [x - self.window_size for x in ground_truth_sequence]
+
+                    # NOTE end get ground truth sequence function
+
+                    # TODO: get the sequences of the anomalous values (make this a function in Model class)
+
+                    # TODO: get the true positives, etc.
+
+                    # TODO: if verbose, plot
+
+                except Exception as e:
+
+                    # if keyboard interrupt break
+                    if e is KeyboardInterrupt:
+                        break
+                    # else continue
+                    logging.warning(RuntimeWarning, str(e))
+                    continue
+
+            # TODO: calculate and report the validation metrics
+
+            # TODO: if verbose plot dist plot
+
     def run(self, verbose: bool = False, save_path: Union[str, Path] = "./output") -> None:
 
         """
