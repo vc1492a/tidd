@@ -194,7 +194,6 @@ class Experiment:
         self.parallel_gpus = parallel_gpus
         self.max_epochs = max_epochs
         self.window_size = window_size
-
         
         # initialize some attributes / objects for validation (out of sample)
         self.tp = 0
@@ -234,6 +233,8 @@ class Experiment:
                 window_size=window_size
             )
 
+            # TODO: after creation assign the path to the training and validation data
+
         else: 
             # TODO: point to the source data
             pass
@@ -269,7 +270,7 @@ class Experiment:
 
             if torch.cuda.device_count() > 1:
                 # TODO: the below may need to be the fastai object
-                self.model.model = torch.nn.DataParallel(self.model.model)
+                self.model.learner = torch.nn.DataParallel(self.model.learner)
 
             else:
                 # emit a UserWarning
@@ -353,132 +354,144 @@ class Experiment:
             self.tp_lengths = list()
             self.fp_lengths = list()
 
-            # get the directories at the specified path
+            # get the full path of each directory containing image files
+            image_directories = Data._get_image_directories(self.validation_data_path)
+            logging.info(image_directories)
 
-            validation_directories = [
-                d for d in os.listdir(self.validation_data_path) if os.path.isdir(self.validation_data_path + '/' + d)
-            ]
+            # validation_directories = [
+            #     d for d in os.listdir(self.validation_data_path) if os.path.isdir(self.validation_data_path + '/' + d)
+            # ]
 
-            # establish a logger
-            tqdm_out = TqdmToLogger(logger, level=logging.INFO)
-
-            # TODO (future work): parallel process the below
-            # process each of the directories in the validation set
-            for d in tqdm(validation_directories, file=tqdm_out, total=len(validation_directories), mininterval=10,
-                          disable=operator.not_(verbose)):
-
-                # error capturing
-                #try:
-
-                logging.info(d)
-
-                    # TODO: for each labeled day of year and satellite, get matching from validation_directories
-                    # will assume that the variable is called image_files
-
-                    # NOTE: start predict_sequence
-                    # TODO: currently assumes that image_files will contain the list of image_files
-                    # TODO: need to find a way to create list of the image paths as image_files variable
-                    # window creation does not depend on the model prediction 
-                    # but only on the amount of windows/images to predict over
-                    #image_files = [] # TODO: placeholder
-                    #window_start = list(range(len(image_files)))
-                    #window_end = list(map(lambda x: x + self.window_size - 1, window_start))
-                    #windows = list(zip(window_start, window_end))
-
-                    #try:
-                     #   classification, classification_confidence, classification_bool = self.model.predict_sequences(image_files)
-                    #except Exception as e:
-                    #    print("Error encountered when predicting!")
-                    #    if e is KeyboardInterrupt:
-                    #        break
-                    
-                    # NOTE: end predict_sequence function
-
-                    # NOTE: start generate ground truth sequences function
-                    # TODO: utilize functions in Data class to read data from file
-                    # # now we need to load in the original data (float data) that contains the second of day
-                    # # and other data needed for visualization and metrics reporting
-
-                    # TODO: get the name/location of the file dynamically
-                    #ground_station_name = "ahup" # TODO: Placeholder
-                    #sat_name = "G07" # TODO: Placeholder
-                    #sat = "../data/hawaii/2012/302/" + ground_station_name + "3020.12o_" + sat_name + ".txt" # TODO: Placeholder
-
-
-                    #df = Data.read_data_from_file(sat)
-                    #df = Transform.sod_to_timestamp(df) # this should be the same as before now
-
-                    #
-                    # # get the day of year of the period for use with the ground truth
-                    # doy = datetime.datetime.utcfromtimestamp(df.index.values[
-                    #                                              0].tolist() / 1e9).timetuple().tm_yday  # assumes period is entirely contained within a day
-                    #
-                    # # identify continuous periods as we do when we generate the images and prep the data
-                    # events = np.split(df, np.where(np.isnan(df))[0])
-                    # events = [ev[~np.isnan(ev)] for ev in events if not isinstance(ev, np.ndarray)]
-                    # events = [ev.dropna() for ev in events if
-                    #           not ev.empty and ev.shape[0] > 100]  # NOTE: 100 minute filter to remove short periods
-                    #
-                    # # like the code that generates the "events", we will determine the predicted
-                    # # sequence of anomalies and record whether or not they are true positives
-                    #
-                    # # For simplicity, we do not make scoring adjustments based on
-                    # # how early an anomaly was detected or the distance between false
-                    # # positives and labeled regions
-                    # ground_truth = [
-                    #     ground_truth_labels[str(doy)][sat_name]["start"],
-                    #     ground_truth_labels[str(doy)][sat_name]["finish"]
-                    # ]
-                    #
-                    # # for now assume events is length 1 # TODO fix later
-                    # event = events[0].reset_index()
-                    #
-                    # ground_truth_sequence = event[
-                    #     (event["sod"] >= ground_truth[0]) & (event["sod"] <= ground_truth[1])].index.values
-                    #
-                    # # adjust the sequence for the window size used earlier tp generate the images
-                    # # TODO: hard coded, make dynamic
-                    # adjusted_ground_truth_sequence = [x - self.window_size for x in ground_truth_sequence]
-
-                    # NOTE end get ground truth sequence function
-
-                    # TODO: get the sequences of the anomalous values (make this a function in Model class)
-
-                    # TODO: get the true positives, etc. 
-                    # TODO: assumes that adjusted_ground_sequence and anom_sequences have the same behavior in model.py
-                    #adjusted_ground_truth_sequence = [] # TODO: placeholder
-                    #anom_sequences = [] # TODO: placeholder
-                    #tp, fn, fp, sub_tp_lens, sub_fp_lens = confusion_matrix_classification(adjusted_ground_truth_sequence, anom_sequences)
-
-                    #self.tp += tp
-                    #self.fn += fn 
-                    #self.fp += fp 
-                    #self.tp_lengths += sub_tp_lens
-                    #self.fp_lengths += sub_fp_lens
-
-                    # TODO: fill in the parameters for plot_classification
-                    # TODO: might want to change the path
-                    #if verbose:
-                        #fig = plot_classification()
-                        #fig.savefig(save_path + '/')
-
-                #except Exception as e:
-
-                    # if keyboard interrupt break
-                    #if e is KeyboardInterrupt:
-                    #     break
-                    ## else continue
-                    #logging.warning(RuntimeWarning, str(e))
-                    #continue
-
-            # TODO: calculate and report the validation metrics
-
-
-            # TODO: if verbose plot dist plot
-            # # check parameters
-            # if verbose is True:
-            #     ax = plot_distribution(self.tp_lengths, self.fp_lengths)
-            #     ax.savefig(save_path + "/classification_sequence_length_distribution.jpg")
+            # # establish a logger
+            # tqdm_out = TqdmToLogger(logger, level=logging.INFO)
+            #
+            # # TODO (future work): parallel process the below
+            # # process each of the directories in the validation set
+            # for d in tqdm(validation_directories, file=tqdm_out, total=len(validation_directories), mininterval=10,
+            #               disable=operator.not_(verbose)):
+            #
+            #     logging.info(d)
+            #
+            #     # error capturing
+            #     try:
+            #
+            #         # TODO: for each labeled day of year and satellite, get matching from validation_directories
+            #         # will assume that the variable is called image_files
+            #         # get the satellite name, ground station name and create an id
+            #         sat_name = d.split("__")[1]
+            #         ground_station_name = d.split("__")[0]
+            #         pass_id = ground_station_name + "__" + sat_name
+            #
+            #         # get the image files in the directory
+            #         base_path = dir_path + "/" + subdir_path + "/unlabeled"
+            #         image_files = [base_path + "/" + f for f in natsort.natsorted(os.listdir(base_path)) if
+            #                        ".jpg" in f and "302" in f.split("_")[0]] subdir_path=d
+            #         )
+            #
+            #         # NOTE: start predict_sequence
+            #         # TODO: currently assumes that image_files will contain the list of image_files
+            #         # TODO: need to find a way to create list of the image paths as image_files variable
+            #         # window creation does not depend on the model prediction
+            #         # but only on the amount of windows/images to predict over
+            #         #image_files = [] # TODO: placeholder
+            #         #window_start = list(range(len(image_files)))
+            #         #window_end = list(map(lambda x: x + self.window_size - 1, window_start))
+            #         #windows = list(zip(window_start, window_end))
+            #
+            #         #try:
+            #          #   classification, classification_confidence, classification_bool = self.model.predict_sequences(image_files)
+            #         #except Exception as e:
+            #         #    print("Error encountered when predicting!")
+            #         #    if e is KeyboardInterrupt:
+            #         #        break
+            #
+            #         # NOTE: end predict_sequence function
+            #
+            #         # NOTE: start generate ground truth sequences function
+            #         # TODO: utilize functions in Data class to read data from file
+            #         # # now we need to load in the original data (float data) that contains the second of day
+            #         # # and other data needed for visualization and metrics reporting
+            #
+            #         # TODO: get the name/location of the file dynamically
+            #         #ground_station_name = "ahup" # TODO: Placeholder
+            #         #sat_name = "G07" # TODO: Placeholder
+            #         #sat = "../data/hawaii/2012/302/" + ground_station_name + "3020.12o_" + sat_name + ".txt" # TODO: Placeholder
+            #
+            #
+            #         #df = Data.read_data_from_file(sat)
+            #         #df = Transform.sod_to_timestamp(df) # this should be the same as before now
+            #
+            #         #
+            #         # # get the day of year of the period for use with the ground truth
+            #         # doy = datetime.datetime.utcfromtimestamp(df.index.values[
+            #         #                                              0].tolist() / 1e9).timetuple().tm_yday  # assumes period is entirely contained within a day
+            #         #
+            #         # # identify continuous periods as we do when we generate the images and prep the data
+            #         # events = np.split(df, np.where(np.isnan(df))[0])
+            #         # events = [ev[~np.isnan(ev)] for ev in events if not isinstance(ev, np.ndarray)]
+            #         # events = [ev.dropna() for ev in events if
+            #         #           not ev.empty and ev.shape[0] > 100]  # NOTE: 100 minute filter to remove short periods
+            #         #
+            #         # # like the code that generates the "events", we will determine the predicted
+            #         # # sequence of anomalies and record whether or not they are true positives
+            #         #
+            #         # # For simplicity, we do not make scoring adjustments based on
+            #         # # how early an anomaly was detected or the distance between false
+            #         # # positives and labeled regions
+            #         # ground_truth = [
+            #         #     ground_truth_labels[str(doy)][sat_name]["start"],
+            #         #     ground_truth_labels[str(doy)][sat_name]["finish"]
+            #         # ]
+            #         #
+            #         # # for now assume events is length 1 # TODO fix later
+            #         # event = events[0].reset_index()
+            #         #
+            #         # ground_truth_sequence = event[
+            #         #     (event["sod"] >= ground_truth[0]) & (event["sod"] <= ground_truth[1])].index.values
+            #         #
+            #         # # adjust the sequence for the window size used earlier tp generate the images
+            #         # # TODO: hard coded, make dynamic
+            #         # adjusted_ground_truth_sequence = [x - self.window_size for x in ground_truth_sequence]
+            #
+            #         # NOTE end get ground truth sequence function
+            #
+            #         # TODO: get the sequences of the anomalous values (make this a function in Model class)
+            #
+            #         # TODO: get the true positives, etc.
+            #         # TODO: assumes that adjusted_ground_sequence and anom_sequences have the same behavior in model.py
+            #         #adjusted_ground_truth_sequence = [] # TODO: placeholder
+            #         #anom_sequences = [] # TODO: placeholder
+            #         #tp, fn, fp, sub_tp_lens, sub_fp_lens = confusion_matrix_classification(adjusted_ground_truth_sequence, anom_sequences)
+            #
+            #         #self.tp += tp
+            #         #self.fn += fn
+            #         #self.fp += fp
+            #         #self.tp_lengths += sub_tp_lens
+            #         #self.fp_lengths += sub_fp_lens
+            #
+            #         # TODO: fill in the parameters for plot_classification
+            #         # TODO: might want to change the path
+            #         #if verbose:
+            #             #fig = plot_classification()
+            #             #fig.savefig(save_path + '/')
+            #
+            #     except Exception as e:
+            #
+            #         # if keyboard interrupt break
+            #         if e is KeyboardInterrupt:
+            #             break
+            #         # else continue
+            #         logging.warning(RuntimeWarning, str(e))
+            #         continue
+            #
+            # # TODO: calculate and report the validation metrics
+            #
+            #
+            # # TODO: if verbose plot dist plot
+            # # # check parameters
+            # # if verbose is True:
+            # #     ax = plot_distribution(self.tp_lengths, self.fp_lengths)
+            # #     ax.savefig(save_path + "/classification_sequence_length_distribution.jpg")
 
     def run(self, verbose: bool = False) -> None:
 

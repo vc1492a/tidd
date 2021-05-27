@@ -247,6 +247,25 @@ class Data:
 
         return df
 
+    @staticmethod
+    def _get_image_directories(path):
+        directory_list = []
+
+        # return nothing if path is a file
+        if os.path.isfile(path):
+            return []
+
+        # add dir to directorylist if it contains .txt files
+        if len([f for f in os.listdir(path) if f.endswith('.jpg')]) > 0:
+            directory_list.append(path)
+
+        for d in os.listdir(path):
+            new_path = os.path.join(path, d)
+            if os.path.isdir(new_path):
+                directory_list += Data._get_image_directories(new_path)
+
+        return directory_list
+
     def _pipe_prepare_training_validation_data(self, path_objects: tuple) -> None:
 
         """
