@@ -348,6 +348,7 @@ class Data:
 
         # for each of the file paths, create a tuple containing the name
         # of the experiment, the file path, and the labeled data
+        # TODO: check that validation data is unlabeled
         path_objects = [tuple((experiment_name, p, paths["/".join(str(p).split("/")[:-3])]["labels"], window_size,
                                paths["/".join(str(p).split("/")[:-3])]["type"])) for p in all_paths_flat]
 

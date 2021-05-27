@@ -8,27 +8,21 @@ A collection of functions covering the functionality needed to:
 
 """
 # imports
-import datetime
 import fastai
 from fastai.vision.all import resnet34, \
-    Adam, ImageDataLoaders, Resize, aug_transforms, cnn_learner, error_rate, accuracy, MixedPrecision, \
+    Adam, ImageDataLoaders, Resize, aug_transforms, cnn_learner, error_rate, accuracy, \
     ShowGraphCallback, CSVLogger, ReduceLROnPlateau, EarlyStoppingCallback, SaveModelCallback, \
     ClassificationInterpretation, load_learner
 from hyperdash import Experiment as HyperdashExperiment
 import logging
-import matplotlib.pyplot as plt
-import natsort
 import numpy as np
 import operator
 import os
-import pandas as pd
 from pathlib import Path
-import seaborn as sns
 import sys
 from tidd.metrics import confusion_matrix_scores, calculating_coverage, \
     precision_score, recall_score, f1_score, confusion_matrix_classification
 from tidd.utils import Data, TqdmToLogger, Transform
-from tidd.plotting import plot_distribution, plot_classification
 import torch
 from tqdm import tqdm
 from typing import List, Union
@@ -128,10 +122,7 @@ class Model:
         except Exception as ex:
             logging.warning(RuntimeWarning, str(ex))
 
-    # TODO: predict function
-
-    def predict(self, 
-                test_item: Union[str, Path, np.ndarray, torch.Tensor]) -> tuple:
+    def predict(self, test_item: Union[str, Path, np.ndarray, torch.Tensor]) -> tuple:
         """
         wrapper function around the fastai.Learner.predict function
 
@@ -167,7 +158,6 @@ class Model:
         classification_bool = [0 if x == "normal" else 1 for x in classifications]
         
         return classifications, confidence_values, classification_bool
-
 
 
 class Experiment:
@@ -232,6 +222,7 @@ class Experiment:
                 validation_data_paths=validation_data_paths,
                 window_size=window_size
             )
+
         else: 
             # TODO: point to the source data
             pass
@@ -507,7 +498,7 @@ class Experiment:
 
         # calculate the coverage
         predictions, targets = self.model.learner.get_preds()  # by default uses validation set
-        anom_cov, normal_cov = calculating_coverage(predictions, targets, self.coverage_threshold)
+        anom_cov, normal_cov = calculating_coverage(predictions, targets)
         self.exp.metric("anomaly coverage", anom_cov)
         self.exp.metric("normal coverage", normal_cov)
 

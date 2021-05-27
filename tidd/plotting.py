@@ -7,6 +7,7 @@ from typing import Union
 from pathlib import Path
 import seaborn as sns
 
+
 def gramian_angular_field(array: Union[pd.Series, np.array, list]) -> plt.figure:
     """
     # TODO:

@@ -38,8 +38,7 @@ def confusion_matrix_scores(cm: np.ndarray) -> tuple:
     return accuracy, precision, recall, F1
 
 
-def calculating_coverage(predictions: torch.Tensor, targets: torch.Tensor,
-                         threshold: float) -> tuple:
+def calculating_coverage(predictions: torch.Tensor, targets: torch.Tensor, threshold: float = 0.9) -> tuple:
     """
     Given a N-sized validation set,
     predictions is an N x 2 tensor since this is a binary classification problem
@@ -99,17 +98,14 @@ def f1_score(precision: float, recall: float) -> float:
     """
 
     try:
-        f_score = 2 * ((precision * recall) / (precision +
-                                                           recall))
+        f_score = 2 * ((precision * recall) / (precision + recall))
     except ZeroDivisionError:
         f_score = 0.
 
     return f_score
 
 
-
-def confusion_matrix_classification(adjusted_ground_truth_sequence: list,
-                                        anom_sequences: list) -> tuple:
+def confusion_matrix_classification(adjusted_ground_truth_sequence: list, anom_sequences: list) -> tuple:
     """
     Records the total count of true positives, false negatives, and false positives
 
