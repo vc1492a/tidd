@@ -1,4 +1,5 @@
 # imports
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -28,7 +29,7 @@ def gramian_angular_field(array: Union[pd.Series, np.array, list]) -> plt.figure
     return figure
 
 
-def plot_distribution(tp_lengths: list, fp_lengths: list, save_path: Union[str, Path] = "./output") -> None:
+def plot_distribution(tp_lengths: list, fp_lengths: list) -> sns.FacetGrid:
     """
     creates the plot of visualizing the distribution of true and false positives
     :input: list of true positive sequences
@@ -58,7 +59,7 @@ def plot_distribution(tp_lengths: list, fp_lengths: list, save_path: Union[str, 
     ax = sns.displot(df_sequence_lengths, x="sequence_length", hue="sequence_type", kde=True, multiple="stack",
                         palette=sns.color_palette(colors))
 
-    plt.savefig(save_path + "/classification_sequence_length_distribution.png")
+    return ax
 
 
 # TODO: move to plotting class / file
@@ -68,7 +69,7 @@ def plot_classification(event: pd.DataFrame,
                             classification_bool: list,
                             classification_confidence: list,
                             save_path: Union[str, Path] = "./output"
-                            ) -> None:
+                            ) -> plt.figure:
     """
     Creates 3 plots
     Plot of the time series data with markings of the start and end of the anomalous sequence
@@ -119,6 +120,6 @@ def plot_classification(event: pd.DataFrame,
                         wspace=0.2,
                         hspace=0.5)
 
-    plt.savefig(save_path + "/" + pass_id + "_classification_plot.png")
+    return fig
 
-    plt.close(fig)
+    

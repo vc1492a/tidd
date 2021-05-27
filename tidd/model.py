@@ -26,7 +26,7 @@ import pandas as pd
 from pathlib import Path
 import sys
 from tidd.metrics import confusion_matrix_scores, calculating_coverage, precision_score, recall_score, f1_score
-from tidd.utils import Transforms, TqdmToLogger
+from tidd.utils_old import Transforms, TqdmToLogger
 import torch
 from tqdm import tqdm
 from typing import Union
@@ -127,11 +127,6 @@ class Model:
             self.learner = load_learner(import_path)
         except Exception as ex:
             logging.warning(RuntimeWarning, str(ex))
-
-
-    def _predict(self, path: str):
-
-        return 
 
 
 class Experiment:
@@ -583,15 +578,16 @@ class Experiment:
                     # make pretty plots!
                     # TODO:
                     if verbose:
-                        plot_classification(
+                        fig = plot_classification(
                             events[0],
                             pass_id,
                             ground_truth_labels[str(doy)][sat_name],
                             classification_bool,
-                            classification_confidence,
-                            save_path=save_path
+                            classification_confidence
                         )
-
+                        fig.savefig(save_path + '/' + pass_id + '_classification_plot.png')
+                        plt.close(fig)
+                        
                     if self.save_path is not None:
                         print('Saving File of: ', pass_id)
                         try:
@@ -628,7 +624,8 @@ class Experiment:
 
             # if verbose, plot the distribution of the sequence lengths
             if verbose is True:
-                plot_distribution(self.tp_lengths, self.fp_lengths, save_path)
+                ax = plot_distribution(self.tp_lengths, self.fp_lengths)
+                ax.savefig(save_path + "/classification_sequence_length_distribution.jpg")
 
     def run(self, ground_truth_labels: dict, verbose: bool = False) -> None:
 

@@ -25,8 +25,10 @@ import pandas as pd
 from pathlib import Path
 import seaborn as sns
 import sys
-from tidd.metrics import confusion_matrix_scores, calculating_coverage, precision_score, recall_score, f1_score
-from tidd.utils import Data, TqdmToLogger
+from tidd.metrics import confusion_matrix_scores, calculating_coverage, \
+    precision_score, recall_score, f1_score, confusion_matrix_classification
+from tidd.utils import Data, TqdmToLogger, Transform
+from tidd.plotting import plot_distribution, plot_classification
 import torch
 from tqdm import tqdm
 from typing import List, Union
@@ -128,6 +130,45 @@ class Model:
 
     # TODO: predict function
 
+    def predict(self, 
+                test_item: Union[str, Path, np.ndarray, torch.Tensor]) -> tuple:
+        """
+        wrapper function around the fastai.Learner.predict function
+
+        :param test_item: either the file path or the tensor/array object
+                            single item for the predictor
+        :output: class label
+        :output: np.ndarray of confidence values
+        """
+        prediction = self.learner.predict(test_item)
+        return prediction[0], prediction[2].cpu().detach().numpy()
+
+    def predict_sequences(self, test_items_list: list) -> tuple:
+        """
+        returns the list of prediction labels and confidence values
+        wrapper for the Model.predict over multiple items
+
+        :param test_items_list: list of Union[str, Path, np.ndarray, torch.Tensor]
+                                to be predicted over
+        :return: list of class labels, list of np.ndarrays of confidence values
+                list of ints 1 is an anomalous index
+
+        """
+        classifications = list()
+        confidence_values = list()
+
+        for item in test_items_list:
+
+            label, confidence = self.predict(item)
+            classifications.append(label)
+            confidence_values.append(confidence)
+
+        # generate boolean classification
+        classification_bool = [0 if x == "normal" else 1 for x in classifications]
+        
+        return classifications, confidence_values, classification_bool
+
+
 
 class Experiment:
 
@@ -191,6 +232,9 @@ class Experiment:
                 validation_data_paths=validation_data_paths,
                 window_size=window_size
             )
+        else: 
+            # TODO: point to the source data
+            pass
 
         # prep the Experiment object
         logging.info("Specifying CUDA device...")
@@ -269,10 +313,10 @@ class Experiment:
             self.dls,  # data
             self.model.architecture,  # architecture
             metrics=[error_rate, accuracy],  # metrics
+            path= save_path,
             pretrained=False,  # whether or not to use transfer learning
             normalize=True,  # this function adds a Normalization transform to the dls
-            opt_func=self.model.optimization_function  # SGD # optimizer,
-            # model_dir="" # TODO
+            opt_func=self.model.optimization_function  # SGD # optimizer
         )
 
         # add the model parameters to the Hyperdash experiment
@@ -288,15 +332,27 @@ class Experiment:
         """
 
         # define the save path for the out of sample output and make sure the path exists
+        
         save_path = self.save_path + '/' + 'out_of_sample'
         Path(save_path).mkdir(parents=True, exist_ok=True)
+
+        # probably need 
 
         # subdue the progress bar as to not clog the stdout / cell output
         with self.model.learner.no_bar():
             # disable logging
             self.model.learner.no_logging()
 
+            # initialize some metrics counting
+            # TODO: not sure if you wanted this out of the function completely
+            self.tp = 0
+            self.fn = 0 
+            self.fp = 0 
+            self.tp_lengths = list()
+            self.fp_lengths = list()
+
             # get the directories at the specified path
+
             validation_directories = [
                 d for d in os.listdir(self.validation_data_path) if os.path.isdir(self.validation_data_path + '/' + d)
             ]
@@ -315,45 +371,41 @@ class Experiment:
                     logging.info(d)
 
                     # TODO: for each labeled day of year and satellite, get matching from validation_directories
+                    # will assume that the variable is called image_files
 
                     # NOTE: start predict_sequence
-                    # some setup
-                    classification = list()
-                    classification_confidence = list()
-                    windows = list()
-                    window_start = 0
-                    window_end = self.window_size
+                    # TODO: currently assumes that image_files will contain the list of image_files
+                    # TODO: need to find a way to create list of the image paths as image_files variable
+                    # window creation does not depend on the model prediction 
+                    # but only on the amount of windows/images to predict over
+                    image_files = [] # TODO: placeholder
+                    window_start = list(range(len(image_files)))
+                    window_end = list(map(lambda x: x + self.window_size - 1, window_start))
+                    windows = list(zip(window_start, window_end))
 
-                    # TODO: call predict sequence function that replaces the below
-                    # for img in image_files:
-                    #
-                    #     try:
-                    #
-                    #         # load in the image and predict the classification
-                    #         prediction = self.model.learner.predict(img)
-                    #
-                    #         # store the classification and the window range
-                    #         classification.append(prediction[0])
-                    #         classification_confidence.append(np.max(prediction[2].cpu().detach().numpy()))
-                    #
-                    #         windows.append([window_start, window_end])
-                    #         window_start += 1
-                    #         window_end += 1
-                    #     except Exception as e:
-                    #
-                    #         print("Error encountered when predicting!")
-                    #         if e is KeyboardInterrupt:
-                    #             break
-
-                    # generate boolean classification
-                    classification_bool = [0 if x == "normal" else 1 for x in classification]
+                    try:
+                        classification, classification_confidence, classification_bool = self.model.predict_sequences(image_files)
+                    except Exception as e:
+                        print("Error encountered when predicting!")
+                        if e is KeyboardInterrupt:
+                            break
+                    
                     # NOTE: end predict_sequence function
 
                     # NOTE: start generate ground truth sequences function
                     # TODO: utilize functions in Data class to read data from file
                     # # now we need to load in the original data (float data) that contains the second of day
                     # # and other data needed for visualization and metrics reporting
-                    # df = self._read_data(ground_station_name, sat_name)
+
+                    # TODO: get the name/location of the file dynamically
+                    ground_station_name = "ahup" # TODO: Placeholder
+                    sat_name = "G07" # TODO: Placeholder
+                    sat = "../data/hawaii/2012/302/" + ground_station_name + "3020.12o_" + sat_name + ".txt" # TODO: Placeholder
+
+
+                    df = Data.read_data_from_file(sat)
+                    df = Transform.sod_to_timestamp(df) # this should be the same as before now
+
                     #
                     # # get the day of year of the period for use with the ground truth
                     # doy = datetime.datetime.utcfromtimestamp(df.index.values[
@@ -390,9 +442,23 @@ class Experiment:
 
                     # TODO: get the sequences of the anomalous values (make this a function in Model class)
 
-                    # TODO: get the true positives, etc.
+                    # TODO: get the true positives, etc. 
+                    # TODO: assumes that adjusted_ground_sequence and anom_sequences have the same behavior in model.py
+                    adjusted_ground_truth_sequence = [] # TODO: placeholder
+                    anom_sequences = [] # TODO: placeholder
+                    tp, fn, fp, sub_tp_lens, sub_fp_lens = confusion_matrix_classification(adjusted_ground_truth_sequence, anom_sequences)
 
-                    # TODO: if verbose, plot
+                    self.tp += tp
+                    self.fn += fn 
+                    self.fp += fp 
+                    self.tp_lengths += sub_tp_lens
+                    self.fp_lengths += sub_fp_lens
+
+                    # TODO: fill in the parameters for plot_classification
+                    # TODO: might want to change the path
+                    #if verbose:
+                        #fig = plot_classification()
+                        #fig.savefig(save_path + '/')
 
                 except Exception as e:
 
@@ -405,9 +471,14 @@ class Experiment:
 
             # TODO: calculate and report the validation metrics
 
-            # TODO: if verbose plot dist plot
 
-    def run(self, verbose: bool = False, save_path: Union[str, Path] = "./output") -> None:
+            # TODO: if verbose plot dist plot
+            # # check parameters
+            # if verbose is True:
+            #     ax = plot_distribution(self.tp_lengths, self.fp_lengths)
+            #     ax.savefig(save_path + "/classification_sequence_length_distribution.jpg")
+
+    def run(self, verbose: bool = False) -> None:
 
         """
         Runs the Experiment according to the specified Experiment and Model

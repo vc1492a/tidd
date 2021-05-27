@@ -105,3 +105,66 @@ def f1_score(precision: float, recall: float) -> float:
         f_score = 0.
 
     return f_score
+
+
+
+def confusion_matrix_classification(adjusted_ground_truth_sequence: list,
+                                        anom_sequences: list) -> tuple:
+    """
+    Records the total count of true positives, false negatives, and false positives
+
+    A true positive is recorded if any portion of a predicted sequence of anomalies falls within any
+    true labeled sequence. Only one true positive is recorded
+    even if portions of multiple predicted sequences fall within
+    a labeled sequence.
+
+    If no predicted sequences overlap with a positively labeled
+    sequence, a false negative is recorded for the labeled sequence
+
+    For all predicted sequences that do not overlap a labeled
+    anomalous region, a false positive is recorded
+
+    Also returns tp_lengths and fp_lengths
+
+
+    :input adjusted_ground_truth_sequences: list of labels for each minute
+    :input anom_sequences: list of indices where the minute sequences are considered anomalous
+    :input tp_lengths: list of the length of the true anomalous seq
+    :input fp_lengths: list of the lengths of the false anomalous seq
+    :output: tuple of 3 integers and 2 lists (true positive, false negative, 
+            false positive, tp_lengths, fp_lengths)
+    """
+
+    tp = 0
+    fn = 0
+    fp = 0
+    tp_lengths = list()
+    fp_lengths = list()
+
+    # NOTE: current code assumes one anomalous sequence in ground truth
+
+    # check for false positives and true positives
+    for anom_seq in anom_sequences:
+
+        intersection = list(set(adjusted_ground_truth_sequence) & set(anom_seq))
+
+        if len(intersection) > 0:
+            tp = 1
+            fn = 0
+
+            tp_lengths.append(len(anom_seq))
+
+        else:
+            fp += 1
+
+            fp_lengths.append(len(anom_seq))
+
+    # check for false negatives
+    fn = 1
+    for anom_seq in anom_sequences:
+        intersection = list(set(adjusted_ground_truth_sequence) & set(anom_seq))
+        if len(intersection) > 0:
+            fn = 0
+            break
+
+    return tp, fn, fp, tp_lengths, fp_lengths
