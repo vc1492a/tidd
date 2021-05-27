@@ -195,6 +195,17 @@ class Experiment:
         self.max_epochs = max_epochs
         self.window_size = window_size
 
+        
+        # initialize some attributes / objects for validation (out of sample)
+        self.tp = 0
+        self.fn = 0
+        self.fp = 0
+        self.tp_lengths = list()
+        self.fp_lengths = list()
+
+        # # TODO: initialize an object in which to store metrics
+        # self.metrics = dict()
+
         # create the save_path dir if it doesn't exist
         Path(save_path).mkdir(parents=True, exist_ok=True)
         self.save_path = save_path
@@ -357,9 +368,9 @@ class Experiment:
                           disable=operator.not_(verbose)):
 
                 # error capturing
-                try:
+                #try:
 
-                    logging.info(d)
+                logging.info(d)
 
                     # TODO: for each labeled day of year and satellite, get matching from validation_directories
                     # will assume that the variable is called image_files
@@ -369,17 +380,17 @@ class Experiment:
                     # TODO: need to find a way to create list of the image paths as image_files variable
                     # window creation does not depend on the model prediction 
                     # but only on the amount of windows/images to predict over
-                    image_files = [] # TODO: placeholder
-                    window_start = list(range(len(image_files)))
-                    window_end = list(map(lambda x: x + self.window_size - 1, window_start))
-                    windows = list(zip(window_start, window_end))
+                    #image_files = [] # TODO: placeholder
+                    #window_start = list(range(len(image_files)))
+                    #window_end = list(map(lambda x: x + self.window_size - 1, window_start))
+                    #windows = list(zip(window_start, window_end))
 
-                    try:
-                        classification, classification_confidence, classification_bool = self.model.predict_sequences(image_files)
-                    except Exception as e:
-                        print("Error encountered when predicting!")
-                        if e is KeyboardInterrupt:
-                            break
+                    #try:
+                     #   classification, classification_confidence, classification_bool = self.model.predict_sequences(image_files)
+                    #except Exception as e:
+                    #    print("Error encountered when predicting!")
+                    #    if e is KeyboardInterrupt:
+                    #        break
                     
                     # NOTE: end predict_sequence function
 
@@ -389,13 +400,13 @@ class Experiment:
                     # # and other data needed for visualization and metrics reporting
 
                     # TODO: get the name/location of the file dynamically
-                    ground_station_name = "ahup" # TODO: Placeholder
-                    sat_name = "G07" # TODO: Placeholder
-                    sat = "../data/hawaii/2012/302/" + ground_station_name + "3020.12o_" + sat_name + ".txt" # TODO: Placeholder
+                    #ground_station_name = "ahup" # TODO: Placeholder
+                    #sat_name = "G07" # TODO: Placeholder
+                    #sat = "../data/hawaii/2012/302/" + ground_station_name + "3020.12o_" + sat_name + ".txt" # TODO: Placeholder
 
 
-                    df = Data.read_data_from_file(sat)
-                    df = Transform.sod_to_timestamp(df) # this should be the same as before now
+                    #df = Data.read_data_from_file(sat)
+                    #df = Transform.sod_to_timestamp(df) # this should be the same as before now
 
                     #
                     # # get the day of year of the period for use with the ground truth
@@ -435,15 +446,15 @@ class Experiment:
 
                     # TODO: get the true positives, etc. 
                     # TODO: assumes that adjusted_ground_sequence and anom_sequences have the same behavior in model.py
-                    adjusted_ground_truth_sequence = [] # TODO: placeholder
-                    anom_sequences = [] # TODO: placeholder
-                    tp, fn, fp, sub_tp_lens, sub_fp_lens = confusion_matrix_classification(adjusted_ground_truth_sequence, anom_sequences)
+                    #adjusted_ground_truth_sequence = [] # TODO: placeholder
+                    #anom_sequences = [] # TODO: placeholder
+                    #tp, fn, fp, sub_tp_lens, sub_fp_lens = confusion_matrix_classification(adjusted_ground_truth_sequence, anom_sequences)
 
-                    self.tp += tp
-                    self.fn += fn 
-                    self.fp += fp 
-                    self.tp_lengths += sub_tp_lens
-                    self.fp_lengths += sub_fp_lens
+                    #self.tp += tp
+                    #self.fn += fn 
+                    #self.fp += fp 
+                    #self.tp_lengths += sub_tp_lens
+                    #self.fp_lengths += sub_fp_lens
 
                     # TODO: fill in the parameters for plot_classification
                     # TODO: might want to change the path
@@ -451,14 +462,14 @@ class Experiment:
                         #fig = plot_classification()
                         #fig.savefig(save_path + '/')
 
-                except Exception as e:
+                #except Exception as e:
 
                     # if keyboard interrupt break
-                    if e is KeyboardInterrupt:
-                        break
-                    # else continue
-                    logging.warning(RuntimeWarning, str(e))
-                    continue
+                    #if e is KeyboardInterrupt:
+                    #     break
+                    ## else continue
+                    #logging.warning(RuntimeWarning, str(e))
+                    #continue
 
             # TODO: calculate and report the validation metrics
 
@@ -476,7 +487,6 @@ class Experiment:
         parameters.
         :param verbose: If True, shows Model training information and loss curves and plots
         results visually for interpretation.
-        :param save_path: A specified file path in which to save Experiment artifacts.
         :return: None
         """
 
@@ -510,9 +520,7 @@ class Experiment:
             interp.plot_confusion_matrix(figsize=(4, 4), dpi=120)
 
         # TODO: # # as part of the Experiment, perform an out-of-sample (OOS) validation of the results
-        # self._out_of_sample(
-        #     save_path=save_path #
-        # )
+        self._out_of_sample()
 
         # end the experiment
         self.exp.end()
