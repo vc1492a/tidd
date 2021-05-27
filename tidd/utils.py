@@ -209,7 +209,7 @@ class Data:
 
         """
         For a given satellite, reads in the satellite and returns a Pandas DataFrame.
-        :param file_name: the name of the file.
+        :param file_name: the filename of the data file.
         :return: a Pandas DataFrame containing the data for this particular satellite / set of data.
         """
 
