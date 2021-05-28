@@ -356,7 +356,11 @@ class Experiment:
 
             # get the full path of each directory containing image files
             image_directories = Data._get_image_directories(self.validation_data_path)
+            # filter for those containing "unlabeled:
+            image_directories = [i for i in image_directories if "unlabeled" in i]
             logging.info(image_directories)
+
+
 
             # validation_directories = [
             #     d for d in os.listdir(self.validation_data_path) if os.path.isdir(self.validation_data_path + '/' + d)
