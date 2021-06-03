@@ -13,8 +13,10 @@ from fastai.vision.all import resnet34, \
     Adam, ImageDataLoaders, Resize, aug_transforms, cnn_learner, error_rate, accuracy, \
     ShowGraphCallback, CSVLogger, ReduceLROnPlateau, EarlyStoppingCallback, SaveModelCallback, \
     ClassificationInterpretation, load_learner
+import glob
 from hyperdash import Experiment as HyperdashExperiment
 import logging
+import natsort
 import numpy as np
 import operator
 import os
@@ -356,28 +358,56 @@ class Experiment:
 
             # get the full path of each directory containing image files
             image_directories = Data._get_image_directories(self.validation_data_path)
-            # filter for those containing "unlabeled:
+            # filter for those containing "unlabeled"
             image_directories = [i for i in image_directories if "unlabeled" in i]
             logging.info(image_directories)
 
+            # establish a logger
+            tqdm_out = TqdmToLogger(logger, level=logging.INFO)
+            
+            # TODO (future work): parallel process the below
+            # process each of the directories in the validation set
+            for d in tqdm(image_directories, file=tqdm_out, total=len(image_directories), mininterval=10, disable=operator.not_(verbose)):
+            
+                logging.info(d)
+        
+                # get the images in the directory 
+                image_files = [d + "/" + f for f in
+                        natsort.natsorted(os.listdir(d)) if ".jpg" in f and
+                        f[0] != "."]
+            
+                logging.info(len(image_files))
+                #logging.info(image_files)
+
+                # for the sorted images in the directory, predict the sequence
+                try:
+                    classification, classification_confidence, classification_bool = self.model.predict_sequences(image_files)
+                except Exception as ex:
+                    logging.warning(RuntimeWarning, "Error encountered when predicting sequence.")
+                    logging.warning(str(ex))
+                    if ex is KeyboardInerrupt:
+                        break
+                    continue
+                    
+                logging.info(len(classification))
+                    
+                # we need to load in the original data file (float data) that contains the second of day 
+                # and other data needed for visualization and metrics 
+                logging.info(image_files[0])
+                #doy = str(image_files[0].split("/")[-1].split("_")[0])
+                #sat_name = 
 
 
-            # validation_directories = [
-            #     d for d in os.listdir(self.validation_data_path) if os.path.isdir(self.validation_data_path + '/' + d)
-            # ]
 
-            # # establish a logger
-            # tqdm_out = TqdmToLogger(logger, level=logging.INFO)
-            #
-            # # TODO (future work): parallel process the below
-            # # process each of the directories in the validation set
-            # for d in tqdm(validation_directories, file=tqdm_out, total=len(validation_directories), mininterval=10,
-            #               disable=operator.not_(verbose)):
-            #
-            #     logging.info(d)
-            #
-            #     # error capturing
-            #     try:
+                # 
+                
+                
+
+
+
+
+            #    # error capturing
+            #    try:
             #
             #         # TODO: for each labeled day of year and satellite, get matching from validation_directories
             #         # will assume that the variable is called image_files
@@ -537,7 +567,7 @@ class Experiment:
             interp.plot_confusion_matrix(figsize=(4, 4), dpi=120)
 
         # TODO: # # as part of the Experiment, perform an out-of-sample (OOS) validation of the results
-        self._out_of_sample()
+        self._out_of_sample(verbose=verbose)
 
         # end the experiment
         self.exp.end()
