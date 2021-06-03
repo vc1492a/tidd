@@ -182,6 +182,11 @@ class Transform:
                             output_dir + "/" + combo + "/labeled/normal/" + str(doy) + "_" + str(
                                 idx) + "_" + str(idx + window_size) + "_GAF.jpg")
 
+                    if "validation" in output_dir + "/" + combo:
+                        plt.savefig(
+                            output_dir + "/" + combo + "/unlabeled/" + str(doy) + "_" + str(
+                                idx) + "_" + str(idx + window_size) + "_GAF.jpg")
+
                     plt.close()
 
     @staticmethod
