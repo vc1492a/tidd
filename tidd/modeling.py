@@ -385,7 +385,7 @@ class Experiment:
                 except Exception as ex:
                     logging.warning(RuntimeWarning, "Error encountered when predicting sequence.")
                     logging.warning(str(ex))
-                    if ex is KeyboardInerrupt:
+                    if ex is KeyboardInterrupt:
                         break
                     continue
                     
