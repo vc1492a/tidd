@@ -138,6 +138,7 @@ class Transform:
             # generate the path if it doesn't exist
             Path(output_dir + "/" + combo + "/labeled/anomalous").mkdir(parents=True, exist_ok=True)
             Path(output_dir + "/" + combo + "/labeled/normal").mkdir(parents=True, exist_ok=True)
+            Path(output_dir + "/" + combo + "/unlabeled").mkdir(parents=True, exist_ok=True)
 
             # convert to seconds of the day for later annotation
             period["sod"] = (period.index.hour * 60 + period.index.minute) * 60 + period.index.second

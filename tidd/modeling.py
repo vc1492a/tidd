@@ -15,6 +15,7 @@ from fastai.vision.all import resnet34, \
     ClassificationInterpretation, load_learner
 import glob
 from hyperdash import Experiment as HyperdashExperiment
+import json
 import logging
 import natsort
 import numpy as np
@@ -360,9 +361,13 @@ class Experiment:
             image_directories = Data._get_image_directories(self.validation_data_path)
             # filter for those containing "unlabeled"
             image_directories = [i for i in image_directories if "unlabeled" in i]
-            logging.info(image_directories)
+           # logging.info(image_directories)
 
-            # establish a logger
+            # read in labels 
+            labels_path = self.validation_data_path.split(self.name)[0] + "/" + self.name + "/tid_start_finish_times.json"
+            with open(labels_path, "rb") as f_in:
+                labels = json.load(f_in)
+                locations = list(labels.keys())
             tqdm_out = TqdmToLogger(logger, level=logging.INFO)
             
             # TODO (future work): parallel process the below
@@ -371,17 +376,37 @@ class Experiment:
             
                 logging.info(d)
         
+                # get the satellite amd ground station from the path 
+                ground_station = d.split("__")[0].split("/")[-1]
+                sat = d.split("__")[1].split("/")[0]
+                combo_key = ground_station + "__" + sat
+
                 # get the images in the directory 
                 image_files = [d + "/" + f for f in
                         natsort.natsorted(os.listdir(d)) if ".jpg" in f and
                         f[0] != "."]
-            
-                logging.info(len(image_files))
-                #logging.info(image_files)
+
+                # determine the location 
+                location = None
+                for l in locations:
+                    if l in d:
+                        location = l
+                        break
+
+                # filter for images that match the day of year 
+                image_files_with_labels = list()
+                for i in image_files:
+                    
+                    doy = i.split("/")[-1].split("_")[0]
+                    
+                    if doy in labels[location].keys():
+                        image_files_with_labels.append(i)
+
+                logging.info(len(image_files_with_labels))
 
                 # for the sorted images in the directory, predict the sequence
                 try:
-                    classification, classification_confidence, classification_bool = self.model.predict_sequences(image_files)
+                    classification, classification_confidence, classification_bool = self.model.predict_sequences(image_files_with_labels)
                 except Exception as ex:
                     logging.warning(RuntimeWarning, "Error encountered when predicting sequence.")
                     logging.warning(str(ex))
@@ -392,10 +417,20 @@ class Experiment:
                 logging.info(len(classification))
                     
                 # we need to load in the original data file (float data) that contains the second of day 
-                # and other data needed for visualization and metrics 
-                logging.info(image_files[0])
-                #doy = str(image_files[0].split("/")[-1].split("_")[0])
-                #sat_name = 
+                # using the doy and sat of first image load in the data file 
+                file_path = None
+                logging.info(os.listdir(d.split(experiments)[0]))
+                
+                #for i in os.listdir("../data/" + location):
+                #    logging.info(i)
+                #    logging.info(doy, sat, ground_station)
+                #    if doy in i and location in i and sat in i and ground_station in i:
+                #        file_path = i
+#
+                #df = Data.read_data_from_file(file_path)
+
+                #logging.info(df.head())
+                #logging.info(df.shape)
 
 
 
