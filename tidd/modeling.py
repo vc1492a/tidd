@@ -392,6 +392,10 @@ class Experiment:
                     if l in d:
                         location = l
                         break
+                
+                # assign the doy for the location 
+                # note: assumes one doy for the location 
+                doy_for_location = list(labels[location].keys())[0]
 
                 # filter for images that match the day of year 
                 image_files_with_labels = list()
@@ -419,18 +423,72 @@ class Experiment:
                 # we need to load in the original data file (float data) that contains the second of day 
                 # using the doy and sat of first image load in the data file 
                 file_path = None
-                logging.info(os.listdir(d.split(experiments)[0]))
-                
-                #for i in os.listdir("../data/" + location):
-                #    logging.info(i)
-                #    logging.info(doy, sat, ground_station)
-                #    if doy in i and location in i and sat in i and ground_station in i:
-                #        file_path = i
-#
-                #df = Data.read_data_from_file(file_path)
+                location_path = d.split("experiments")[0]
+                file_paths = list()
+                for path, subdirs, files in os.walk(location_path + location):
+                    for name in files:
+                        file_paths.append(os.path.join(path, name))
 
-                #logging.info(df.head())
-                #logging.info(df.shape)
+                for i in file_paths:
+
+                    # TODO: wrong!!!
+
+                    #logging.info("-----------")
+                    #logging.info(i)
+                    #logging.info(doy)
+                    #logging.info(sat)
+                    #logging.info(ground_station)
+                    if doy_for_location in i and location in i and sat in i and ground_station in i:
+                        file_path = i
+#
+                logging.info(file_path)
+
+                df = Data.read_data_from_file(file_path)
+
+                logging.info(df.head())
+                logging.info(df.shape)
+
+                # todo: refactor below 
+                year = 2012
+                if location == "chile":
+                    year = 2015
+                    
+                # convert sod to timestamp
+                df = Transform.sod_to_timestamp(
+                    df,
+                    year=year,
+                    day_of_year=int(doy_for_location)
+                )
+
+                # resample to 1 min
+                # TODO: expose as param
+                df = df.resample("1min").mean()
+
+                # transform values by first getting the individual events
+                events = Transform().split_by_nan(
+                    dataframe=df,
+                    min_sequence_length=100
+                )
+
+                logging.info(len(events))
+
+                logging.info(events[0].shape)
+
+                logging.info(sat)
+
+                event = events[0]
+
+                logging.info(event.head())
+                logging.info(event.columns.values)
+
+                ground_truth_sequence = event[
+                    (event["sod"] >= labels[location][doy_for_location][sat]["start"]) & (event["sod"] >= labels[location][day_of_location][sat]["finish"])        
+                ].index.values
+
+                # adjust the sequence for the window size used to generate the images 
+                adjusted_ground_truth_sequence = [x - self.window_size for x in ground_trith_sequences]
+
+                logging.info(adjusted_ground_truth_sequences)
 
 
 
