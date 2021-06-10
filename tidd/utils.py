@@ -1,3 +1,12 @@
+"""
+A collection of functions covering the functionality needed to:
+
+- Read raw data from files stored on local disk.
+- Transform raw data into images needed for modeling.
+- Other data and transforms needed for modeling and experiments.
+
+"""
+
 # imports
 import datetime
 import io
@@ -67,14 +76,20 @@ class Transform:
         return events
 
     @staticmethod
-    def sod_to_timestamp(df: pd.DataFrame, year: int, day_of_year: int) -> pd.DataFrame:
+    def sod_to_timestamp(dataframe: pd.DataFrame, year: int, day_of_year: int) -> pd.DataFrame:
 
         """
-        # TODO:
+        Converts seconds of day information to timestamp that can be used to do time-series
+        resampling and other functions.
+        :param dataframe: a Pandas dataframe that contains the second of day as the index.
+        :param year: the year for time represented by the seconds of day.
+        :param day_of_year: the day of year (DOY) for the time represented by the seconds of day.
+        :return: a Pandas dataframe that moves the second of day from the index to a column and contains timestamps
+        as a Pandas DateTimeIndex.
         """
 
         # now convert second of day (sod) to timestamps
-        sod = df.index
+        sod = dataframe.index
         timestamps = list()
         date = datetime.datetime(year, 1, 1) + datetime.timedelta(day_of_year - 1)
 
@@ -89,25 +104,25 @@ class Transform:
             timestamps.append(date_time)
 
         # set the timestamps as a Pandas DateTimeIndex
-        df = df.reset_index()
+        df = dataframe.reset_index()
         df["timestamp"] = timestamps
         df = df.set_index("timestamp")
 
         return df
 
     @staticmethod
-    def group_consecutives(vals: list, step: int = 1) -> list:
+    def group_consecutive_values(values: list, step: int = 1) -> list:
         """
-        Return list of consecutive lists of numbers from vals (number list).
+        Return list of consecutive lists of numbers from values (number list).
         https://stackoverflow.com/questions/7352684/how-to-find-the-groups-of-consecutive-elements-in-a-numpy-array
-        :param vals: A series of values.
+        :param values: A series of values in a list.
         :param step: The step size.
         :return: a list of consecutive lists of numbers.
         """
         run = []
         result = [run]
         expect = None
-        for v in vals:
+        for v in values:
             if (v == expect) or (expect is None):
                 run.append(v)
             else:
@@ -212,24 +227,21 @@ class Transform:
                     plt.close()
 
     @staticmethod
-    def data_to_image(df: Union[pd.Series, np.array]) -> pd.Series:
-
-        # TODO
+    def data_to_image(dataframe: Union[pd.Series, np.array]) -> np.array:
+        """
+        Converts a Pandas Series or Numpy array to a Gramian Angular Field image.
+        :param dataframe: a Pandas Series or Numpy Array containing float data to be converted to an image.
+        :return: a Numpy Array that contains the transformed float data in the form of an image.
+        """
 
         # now generate the field
         transformer = GramianAngularField()
-        X_new = transformer.fit_transform(np.array([df]))
+        X_new = transformer.fit_transform(np.array([dataframe]))
 
         return X_new
 
 
 class Data:
-
-    """
-    # TODO:
-    """
-
-    # def read_image_from_file(self):
 
     @staticmethod
     def read_data_from_file(file_name: Union[str, Path]) -> pd.DataFrame:
@@ -275,14 +287,20 @@ class Data:
         return df
 
     @staticmethod
-    def _get_image_directories(path):
-        directory_list = []
+    def _get_image_directories(path: Union[str, Path]) -> list:
+        """
+        From a base path, retrieves all the subdirectories that contain image (.jpg extension) files.
+        :param path: a base path in which to search for image file directories.
+        :return: a list containing the paths of subdirectories that contain images.
+        """
+
+        directory_list = list()
 
         # return nothing if path is a file
         if os.path.isfile(path):
-            return []
+            return list()
 
-        # add dir to directorylist if it contains .txt files
+        # add dir to directorylist if it contains .jpg files
         if len([f for f in os.listdir(path) if f.endswith('.jpg')]) > 0:
             directory_list.append(path)
 
@@ -296,7 +314,9 @@ class Data:
     def _pipe_prepare_training_validation_data(self, path_objects: tuple) -> None:
 
         """
-        # TODO
+        A back-end pipe that takes tuple containing a path to a local file, ground truth, and other
+        information and generates image data used for modeling and experiments. This hidden function
+        is the back-end for prepare_training_validation_data and is executed in parallel.
         """
 
         try:
@@ -358,7 +378,14 @@ class Data:
                                          ) -> list:
 
         """
-        # TODO:
+        Prepares training and out of sample validation image data for use in experiments and modeling.
+        :param experiment_name: The name of the experiment, used to create the training and validation data directory.
+        :param training_data_paths: The paths of the raw data that will be used for training data.
+        :param validation_data_paths: The paths of the raw data that will be used for out of sample validation data.
+        :param window_size: The window size in minutes to use in windowing the raw data and generating image files for
+        modeling, default 60 (1 hour).
+        :return: a list containing the final paths of the training data (position 0) and the validation data
+        (position 1).
         """
 
         # assign types for later differentiation

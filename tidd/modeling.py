@@ -417,7 +417,7 @@ class Experiment:
                     # get the indices of the anomalous values
                     anom_idx = np.where(np.array(classification_bool) == 1)
                     # get the sequences of the anomalous values
-                    anom_sequences = Transform.group_consecutives(list(anom_idx[0]))
+                    anom_sequences = Transform.group_consecutive_values(list(anom_idx[0]))
 
                     # we need to load in the original data file (float data) that contains the second of day
                     # using the doy and sat of first image load in the data file
