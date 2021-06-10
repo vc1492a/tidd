@@ -206,8 +206,8 @@ class Experiment:
         self.tp_lengths = list()
         self.fp_lengths = list()
 
-        # # TODO: initialize an object in which to store metrics
-        # self.metrics = dict()
+        # initialize an object in which to store metrics
+        self.metrics = dict()
 
         # create the save_path dir if it doesn't exist
         Path(save_path).mkdir(parents=True, exist_ok=True)
@@ -335,7 +335,9 @@ class Experiment:
     def _out_of_sample(self, verbose: bool = False) -> None:
 
         """
-        # TODO
+        # Using data in the specified validation_paths and raw data prior to image conversion, performs an
+        out of sample validation using the trained model and a set of ground truth labels. Records out of
+        sample validation metrics in the metrics attribute.
         """
 
         # define the save path for the out of sample output and make sure the path exists
@@ -458,6 +460,7 @@ class Experiment:
                     )
 
                     # get the ground truth for the out of sample assessment
+                    # note: currently assumes one ground truth sequence in period
                     event = events[0].reset_index()
                     ground_truth_sequence = event[
                         (event["sod"] >= labels[location][doy_for_location][sat]["start"]) &
@@ -516,14 +519,19 @@ class Experiment:
             f_score = f1_score(precision, recall)
 
             # record in Hyperdash
+            self.metrics["validation_precision"] = precision
             precision = self.exp.metric("validation_precision", precision)
             recall = self.exp.metric("validation_recall", recall)
+            self.metrics["validation_recall"] = precision
             f_score = self.exp.metric("validation_f1_score", f_score)
+            self.metrics["validation_f1_score"] = precision
 
             # get the mean sequence lengths and record in Hyperdash
             tp_sequence_length = np.mean(self.tp_lengths)
+            self.metrics["tp_sequence_length"] = tp_sequence_length
             tp_sequence_length = self.exp.metric("tp_sequence_length", tp_sequence_length)
             fp_sequence_length = np.mean(self.fp_lengths)
+            self.metrics["fp_sequence_length"] = fp_sequence_length
             fp_sequence_length = self.exp.metric("fp_sequence_length", fp_sequence_length)
 
             # if verbose, plot the distribution of the sequence lengths
@@ -554,16 +562,22 @@ class Experiment:
         results = confusion_matrix_scores(cm)
 
         # track results in the Hyperdash experiment
-        self.exp.metric("accuracy", results[0])
-        self.exp.metric("precision", results[1])
+        self.exp.metric("training_accuracy", results[0])
+        self.metrics["training_accuracy"] = results[0]
+        self.exp.metric("training_precision", results[1])
+        self.metrics["training_precision"] = results[1]
         self.exp.metric("recall", results[2])
-        self.exp.metric("F1 Score", results[3])
+        self.metrics["training_recall"] = results[2]
+        self.exp.metric("f1_score", results[3])
+        self.metrics["training_f1_score"] = results[4]
 
         # calculate the coverage
         predictions, targets = self.model.learner.get_preds()  # by default uses validation set
         anom_cov, normal_cov = calculating_coverage(predictions, targets)
         self.exp.metric("anomaly coverage", anom_cov)
+        self.metrics["training_anomaly_coverage"] = anom_cov
         self.exp.metric("normal coverage", normal_cov)
+        self.metrics["training_normal_coverage"] = normal_cov
 
         # if verbose, show results
         if verbose is True:
