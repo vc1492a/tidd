@@ -174,19 +174,12 @@ class Transform:
             # generate the path if it doesn't exist
             Path(output_dir + "/" + combo + "/labeled/anomalous").mkdir(parents=True, exist_ok=True)
             Path(output_dir + "/" + combo + "/labeled/normal").mkdir(parents=True, exist_ok=True)
-            Path(output_dir + "/" + combo + "/unlabeled").mkdir(parents=True, exist_ok=True)
-
-            # convert to seconds of the day for later annotation
-            period["sod"] = (period.index.hour * 60 + period.index.minute) * 60 + period.index.second
 
             # get the satellite
             sat = combo.split("__")[1]
 
             # get the start time of the sat and the end time
-            try:
-                anom_range = [labels[str(doy)][sat]["start"], labels[str(doy)][sat]["finish"]]
-            except KeyError:
-                anom_range = [0, 1] # NOTE: assumes window size is never less than 3, may want userwarning
+            anom_range = [labels[str(doy)][sat]["start"], labels[str(doy)][sat]["finish"]]
 
             # process all the windows
             for idx in list(range(period.shape[0])):
@@ -202,7 +195,7 @@ class Transform:
 
                     # now generate the field
                     X_new = Transform().data_to_image(
-                        df=subset[combo]
+                        dataframe=subset[combo]
                     )
 
                     # plot and save
@@ -220,6 +213,7 @@ class Transform:
                                 idx) + "_" + str(idx + window_size) + "_GAF.jpg")
 
                     if "validation" in output_dir + "/" + combo:
+                        Path(output_dir + "/" + combo + "/unlabeled").mkdir(parents=True, exist_ok=True)
                         plt.savefig(
                             output_dir + "/" + combo + "/unlabeled/" + str(doy) + "_" + str(
                                 idx) + "_" + str(idx + window_size) + "_GAF.jpg")
@@ -435,10 +429,12 @@ class Data:
                 for i, _ in enumerate(pp.imap_unordered(Data()._pipe_prepare_training_validation_data, path_objects)):
                     pbar.update()
 
-        training_data_path = "/".join(training_data_paths[-1].split("/")[:-1]) + "/experiments/" + experiment_name + "/train"
+        training_data_path = "/".join(training_data_paths[-1].split("/")[:-1]) + "/experiments/" + experiment_name \
+                             + "/train"
         validation_data_path = None
         if validation_data_paths is not None:
-            validation_data_path = "/".join(validation_data_paths[-1].split("/")[:-1]) + "/experiments/" + experiment_name  + "/validation"
+            validation_data_path = "/".join(validation_data_paths[-1].split("/")[:-1]) + "/experiments/" + \
+                                   experiment_name + "/validation"
 
         return [training_data_path, validation_data_path]
 

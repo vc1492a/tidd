@@ -29,7 +29,8 @@ E = Experiment(
     parallel_gpus=False,
     max_epochs=50,
     generate_data=True, # when true, uses paths params for raw. When false, uses paths params to mark imaged data.
-    save_path="../output"
+    save_path="../output",
+    window_size=60
 )
 
 # # run an experiment
