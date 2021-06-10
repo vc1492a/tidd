@@ -41,7 +41,7 @@ dependencies and then install the library. Then, pull the appropriate
 branch and then install: 
 
 ```
-pip install . -e
+pip install . 
 ```
 
 Make sure to check out the `notebooks` and `data` directories 
@@ -120,7 +120,7 @@ the sTEC estimations
 - **Azi**: the azimuth of the satellite epoch by epoch
 - **Ele**: the elevation of the satellite epoch by epoch (usually we 
 don’t consider data with elevation under 20 degrees since they are too 
-noisy)#
+noisy)
 
 #### Hawaii
  
