@@ -132,8 +132,7 @@ class Model:
 
         :param test_item: either the file path or the tensor/array object
                             single item for the predictor
-        :output: class label
-        :output: np.ndarray of confidence values
+        :return: a tuple containing the predicted label and the confidence values for the classes.
         """
         prediction = self.learner.predict(test_item)
         return prediction[0], np.max(prediction[2].cpu().detach().numpy())
@@ -260,6 +259,7 @@ class Experiment:
         """
         Checks that CUDA is available for model training and that the specified device is available. Returns a
         warning to the user when this is not the case.
+        :return: None
         """
 
         try:
@@ -335,9 +335,11 @@ class Experiment:
     def _out_of_sample(self, verbose: bool = False) -> None:
 
         """
-        # Using data in the specified validation_paths and raw data prior to image conversion, performs an
+        Using data in the specified validation_paths and raw data prior to image conversion, performs an
         out of sample validation using the trained model and a set of ground truth labels. Records out of
         sample validation metrics in the metrics attribute.
+        :param verbose: Default false. When true, plots progress bars and saves plots in the save_path.
+        :return: None
         """
 
         # define the save path for the out of sample output and make sure the path exists

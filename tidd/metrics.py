@@ -17,9 +17,9 @@ def confusion_matrix_scores(cm: np.ndarray) -> tuple:
     Returns a tuple of classification metrics according to
     the anomalous class as True Positive
 
-    :input cm: a numpy array of shape (2, 2) that is formatted like the output
+    :param cm: a numpy array of shape (2, 2) that is formatted like the output
     of the ClassificationInterpretation object in FastAI
-    :output: 4-tuple of the accuracy, precision, recall, and F1 scores
+    :return: 4-tuple of the accuracy, precision, recall, and F1 scores
     """
 
     accuracy = np.trace(cm)/np.sum(cm)
@@ -44,10 +44,10 @@ def calculating_coverage(predictions: torch.Tensor, targets: torch.Tensor, thres
     predictions is an N x 2 tensor since this is a binary classification problem
     targets is an N x 1 tensor where each targets[i] is the correct class
     
-    :input predictions: N x 2 tensor with the classification confidences
-    :input targets: N x 1 tensor with the correct labels
-    :input threshold: float number representing the target confidence threshold
-    :output: 2-tuple with the coverage of the anomaly and normal classifications
+    :param predictions: N x 2 tensor with the classification confidences
+    :param targets: N x 1 tensor with the correct labels
+    :param threshold: float number representing the target confidence threshold
+    :return: 2-tuple with the coverage of the anomaly and normal classifications
     """
     anomalous = np.where(targets == 0)
     normal = np.where(targets == 1)
@@ -62,8 +62,9 @@ def precision_score(true_positive_count: int, false_positive_count: int) -> floa
     """
     calculates the precision score using the count of true positives and count of 
     false positives. 
-    :input: count of true positives 
-    :input" count of false positives 
+    :param true_positive_count: count of true positives
+    :param false_positive_count: count of false positives
+    :return: a float value
     """
 
     try:
@@ -78,8 +79,9 @@ def recall_score(true_positive_count: int, false_negative_count: int) -> float:
     """
     calculates the recall score using the count of true positives and count of
     false negatives.
-    :input: count of true positives
-    :input: count of false negatives
+    :param: count of true positives
+    :param: count of false negatives
+    :return: a float value
     """
 
     try:
@@ -93,8 +95,9 @@ def recall_score(true_positive_count: int, false_negative_count: int) -> float:
 def f1_score(precision: float, recall: float) -> float:
     """
     calculates the F1-score given a proviced precision score and recall score.
-    :input: precision
-    :input: recall
+    :param: precision
+    :param: recall
+    :return: a float value
     """
 
     try:
@@ -122,12 +125,9 @@ def confusion_matrix_classification(adjusted_ground_truth_sequence: list, anom_s
 
     Also returns tp_lengths and fp_lengths
 
-
-    :input adjusted_ground_truth_sequences: list of labels for each minute
-    :input anom_sequences: list of indices where the minute sequences are considered anomalous
-    :input tp_lengths: list of the length of the true anomalous seq
-    :input fp_lengths: list of the lengths of the false anomalous seq
-    :output: tuple of 3 integers and 2 lists (true positive, false negative, 
+    :param adjusted_ground_truth_sequence: list of labels for each minute
+    :param anom_sequences: list of indices where the minute sequences are considered anomalous
+    :return: tuple of 3 integers and 2 lists (true positive, false negative,
             false positive, tp_lengths, fp_lengths)
     """
 
