@@ -13,7 +13,6 @@ from fastai.vision.all import resnet34, \
     Adam, ImageDataLoaders, Resize, aug_transforms, cnn_learner, error_rate, accuracy, \
     ShowGraphCallback, CSVLogger, ReduceLROnPlateau, EarlyStoppingCallback, SaveModelCallback, \
     ClassificationInterpretation, load_learner
-import glob
 from hyperdash import Experiment as HyperdashExperiment
 import json
 import logging
@@ -26,7 +25,7 @@ from pathlib import Path
 import sys
 from tidd.metrics import confusion_matrix_scores, calculating_coverage, \
     precision_score, recall_score, f1_score, confusion_matrix_classification
-from tidd.plotting import plot_classification
+from tidd.plotting import plot_classification, plot_distribution
 from tidd.utils import Data, TqdmToLogger, Transform
 import torch
 from tqdm import tqdm
@@ -340,11 +339,8 @@ class Experiment:
         """
 
         # define the save path for the out of sample output and make sure the path exists
-        
         save_path = self.save_path + '/' + 'out_of_sample'
         Path(save_path).mkdir(parents=True, exist_ok=True)
-
-        # probably need 
 
         # subdue the progress bar as to not clog the stdout / cell output
         with self.model.learner.no_bar():
@@ -352,7 +348,6 @@ class Experiment:
             self.model.learner.no_logging()
 
             # initialize some metrics counting
-            # TODO: not sure if you wanted this out of the function completely
             self.tp = 0
             self.fn = 0 
             self.fp = 0 
@@ -363,7 +358,6 @@ class Experiment:
             image_directories = Data._get_image_directories(self.validation_data_path)
             # filter for those containing "unlabeled"
             image_directories = [i for i in image_directories if "unlabeled" in i]
-           # logging.info(image_directories)
 
             # read in labels 
             labels_path = self.validation_data_path.split(self.name)[0] + "/" + self.name + "/tid_start_finish_times.json"
@@ -375,311 +369,169 @@ class Experiment:
             # TODO (future work): parallel process the below
             # process each of the directories in the validation set
             for d in tqdm(image_directories, file=tqdm_out, total=len(image_directories), mininterval=10, disable=operator.not_(verbose)):
-            
-                #logging.info(d)
-        
-                # get the satellite amd ground station from the path 
-                ground_station = d.split("__")[0].split("/")[-1]
-                sat = d.split("__")[1].split("/")[0]
-                pass_id = ground_station + "__" + sat
 
-                # get the images in the directory 
-                image_files = [d + "/" + f for f in
-                        natsort.natsorted(os.listdir(d)) if ".jpg" in f and
-                        f[0] != "."]
-
-                # determine the location 
-                location = None
-                for l in locations:
-                    if l in d:
-                        location = l
-                        break
-                
-                # assign the doy for the location 
-                # note: assumes one doy for the location 
-                doy_for_location = list(labels[location].keys())[0]
-
-                # filter for images that match the day of year 
-                image_files_with_labels = list()
-                for i in image_files:
-                    
-                    doy = i.split("/")[-1].split("_")[0]
-                    
-                    if doy in labels[location].keys():
-                        image_files_with_labels.append(i)
-
-               # logging.info(len(image_files_with_labels))
-
-                # for the sorted images in the directory, predict the sequence
                 try:
-                    classification, classification_confidence, classification_bool = self.model.predict_sequences(image_files_with_labels)
 
-            # establish a logger
+                    # get the satellite amd ground station from the path
+                    ground_station = d.split("__")[0].split("/")[-1]
+                    sat = d.split("__")[1].split("/")[0]
+                    pass_id = ground_station + "__" + sat
+
+                    # get the images in the directory
+                    image_files = [d + "/" + f for f in
+                            natsort.natsorted(os.listdir(d)) if ".jpg" in f and
+                            f[0] != "."]
+
+                    # determine the location
+                    location = None
+                    for l in locations:
+                        if l in d:
+                            location = l
+                            break
+
+                    # assign the doy for the location
+                    # note: assumes one doy for the location
+                    doy_for_location = list(labels[location].keys())[0]
+
+                    # filter for images that match the day of year
+                    image_files_with_labels = list()
+                    for i in image_files:
+                        doy = i.split("/")[-1].split("_")[0]
+                        if doy in labels[location].keys():
+                            image_files_with_labels.append(i)
+
+                    # for the sorted images in the directory, predict the sequence
+                    try:
+                        classification, classification_confidence, classification_bool = self.model.predict_sequences(
+                            image_files_with_labels)
+                    except Exception as ex:
+                        logging.warning(RuntimeWarning, "Error encountered when predicting sequence. Not included in "
+                                                        "validation result.")
+                        logging.warning(str(ex))
+                        if ex is KeyboardInterrupt:
+                            break
+                        continue
+
+                    # get the indices of the anomalous values
+                    anom_idx = np.where(np.array(classification_bool) == 1)
+                    # get the sequences of the anomalous values
+                    anom_sequences = Transform.group_consecutives(list(anom_idx[0]))
+
+                    # we need to load in the original data file (float data) that contains the second of day
+                    # using the doy and sat of first image load in the data file
+                    file_path = None
+                    location_path = d.split("experiments")[0]
+                    file_paths = list()
+                    for path, subdirs, files in os.walk(location_path + location):
+                        for name in files:
+                            file_paths.append(os.path.join(path, name))
+
+                    # cycle through the file paths until we identify the matching path
+                    # note: assumes only one path matches (which should be the case but is not checked here)
+                    for i in file_paths:
+                        if doy_for_location in i and location in i and sat in i and ground_station in i:
+                            file_path = i
+
+                    # read the original data file (pre-image)
+                    df = Data.read_data_from_file(file_path)
+
+                    # todo: refactor below so that this switch is not hard-coded
+                    year = 2012
+                    if location == "chile":
+                        year = 2015
+
+                    # convert sod to timestamp
+                    df = Transform.sod_to_timestamp(
+                        df,
+                        year=year,
+                        day_of_year=int(doy_for_location)
+                    )
+
+                    # resample to 1 min
+                    # TODO: expose as param
+                    df = df.resample("1min").mean()
+
+                    # transform values by first getting the individual events
+                    events = Transform().split_by_nan(
+                        dataframe=df,
+                        min_sequence_length=100
+                    )
+
+                    # get the ground truth for the out of sample assessment
+                    event = events[0].reset_index()
+                    ground_truth_sequence = event[
+                        (event["sod"] >= labels[location][doy_for_location][sat]["start"]) &
+                        (event["sod"] >= labels[location][doy_for_location][sat]["finish"])
+                    ].index.values
+
+                    # adjust the sequence for the window size used to generate the images
+                    adjusted_ground_truth_sequence = [x - self.window_size for x in ground_truth_sequence]
+
+                    # Obtain the true positives, false negatives, and false positives
+                    tp, fn, fp, tp_lengths, fp_lengths = confusion_matrix_classification(
+                        adjusted_ground_truth_sequence, # note: currently assumes one ground truth sequence in period
+                        anom_sequences
+                    )
+
+                    self.tp += tp
+                    self.fn += fn
+                    self.fp += fp
+                    [self.tp_lengths.append(tpl) for tpl in tp_lengths]
+                    [self.fp_lengths.append(fpl) for fpl in fp_lengths]
+
+                    # if verbose, save plots from validation
+                    if verbose:
+
+                        fig = plot_classification(
+                            event,
+                            pass_id,
+                            labels[location][str(doy_for_location)][sat],
+                            classification_bool,
+                            classification_confidence
+                        )
+                        fig.savefig(save_path + '/' + pass_id + '_classification_plot.png')
+                        plt.close(fig)
+
+                    if self.save_path is not None:
+                        try:
+                            save_df = event.iloc[59:].copy()
+                            save_df['anomaly'] = classification_bool
+                            save_df['confidence'] = classification_confidence
+                            save_df.to_csv(save_path + "/" + pass_id + '_results.csv')
+                        except FileNotFoundError:
+                            logging.info('Save Path "' + save_path + "/" + pass_id + '_results.csv' + '" not valid')
+
                 except Exception as ex:
-                    logging.warning(RuntimeWarning, "Error encountered when predicting sequence.")
-                    logging.warning(str(ex))
                     if ex is KeyboardInterrupt:
                         break
-                    continue
-                
-                # get the indices of the anomalous values
-                anom_idx = np.where(np.array(classification_bool) == 1)
-                # get the sequences of the anomalous values
-                anom_sequences = Transform.group_consecutives(list(anom_idx[0])) 
-
-                #logging.info(anom_sequences)
-
-                #logging.info(len(anom_sequences))
-
-                #logging.info(len(classification))
-                    
-                # we need to load in the original data file (float data) that contains the second of day 
-                # using the doy and sat of first image load in the data file 
-                file_path = None
-                location_path = d.split("experiments")[0]
-                file_paths = list()
-                for path, subdirs, files in os.walk(location_path + location):
-                    for name in files:
-                        file_paths.append(os.path.join(path, name))
-
-                for i in file_paths:
-
-                    # TODO: wrong!!!
-
-                    #logging.info("-----------")
-                    #logging.info(i)
-                    #logging.info(doy)
-                    #logging.info(sat)
-                    #logging.info(ground_station)
-                    if doy_for_location in i and location in i and sat in i and ground_station in i:
-                        file_path = i
-#
-      #          logging.info(file_path)
-
-                df = Data.read_data_from_file(file_path)
-
-    #            logging.info(df.head())
-     #           logging.info(df.shape)
-
-                # todo: refactor below 
-                year = 2012
-                if location == "chile":
-                    year = 2015
-                    
-                # convert sod to timestamp
-                df = Transform.sod_to_timestamp(
-                    df,
-                    year=year,
-                    day_of_year=int(doy_for_location)
-                )
-
-                # resample to 1 min
-                # TODO: expose as param
-                df = df.resample("1min").mean()
-
-                # transform values by first getting the individual events
-                events = Transform().split_by_nan(
-                    dataframe=df,
-                    min_sequence_length=100
-                )
-
-   #             logging.info(len(events))
-
-  #              logging.info(events[0].shape)
-
- #               logging.info(sat)
-
-                event = events[0].reset_index()
-
-#                logging.info(event.head())
-#                logging.info(event.columns.values)
-
-                ground_truth_sequence = event[
-                    (event["sod"] >= labels[location][doy_for_location][sat]["start"]) & (event["sod"] >= labels[location][doy_for_location][sat]["finish"])        
-                ].index.values
-
-                # adjust the sequence for the window size used to generate the images 
-                adjusted_ground_truth_sequence = [x - self.window_size for x in ground_truth_sequence]
-
-                #logging.info(adjusted_ground_truth_sequence)
-
-                #logging.info(len(adjusted_ground_truth_sequence))
-
-                # Obtain the true positives, false negatives, and false positives
-                tp, fn, fp, tp_lengths, fp_lengths = confusion_matrix_classification(
-                    adjusted_ground_truth_sequence, # note: currently assumes one ground truth sequence in period 
-                    anom_sequences
-                )
-
-                self.tp += tp
-                self.fn += fn 
-                self.fp += fp
-                [self.tp_lengths.append(tpl) for tpl in tp_lengths]
-                [self.fp_lengths.append(fpl) for fpl in fp_lengths]
-                
-                # make pretty plots!
-                if verbose:
-
-                    #logging.info(classification_bool[0:5])
-                    #logging.info(classification_confidence[0:5])
-
-                    fig = plot_classification(
-                        event,
-                        pass_id,
-                        labels[location][str(doy_for_location)][sat],
-                        classification_bool,
-                        classification_confidence
-                    )
-                    fig.savefig(save_path + '/' + pass_id + '_classification_plot.png')
-                    plt.close(fig)
-                        
-                if self.save_path is not None:
-                    try:
-                        save_df = event.iloc[59:].copy()
-                        save_df['anomaly'] = classification_bool
-                        save_df['confidence'] = classification_confidence
-                        save_df.to_csv(save_path + "/" + pass_id + '_results.csv')
-                    except FileNotFoundError:
-                        logging.info('Save Path "' + save_path + "/" + pass_id + '_results.csv' + '" not valid')
+                    else:
+                        logging.warning(RuntimeWarning, "Error encountered when running out of sample validation for "
+                                                        "sequence. Not included in validation result.")
+                        logging.warning(str(ex))
+                        continue
 
             # calculate validation metrics
             precision = precision_score(self.tp, self.fp)
             recall = recall_score(self.tp, self.fn)
             f_score = f1_score(precision, recall)
 
+            # record in Hyperdash
             precision = self.exp.metric("validation_precision", precision)
             recall = self.exp.metric("validation_recall", recall)
             f_score = self.exp.metric("validation_f1_score", f_score)
 
+            # get the mean sequence lengths and record in Hyperdash
             tp_sequence_length = np.mean(self.tp_lengths)
             tp_sequence_length = self.exp.metric("tp_sequence_length", tp_sequence_length)
-
             fp_sequence_length = np.mean(self.fp_lengths)
-            fp_sequence_length = self.exp.metric("fp_sequence_length", fp_sequence_length) 
+            fp_sequence_length = self.exp.metric("fp_sequence_length", fp_sequence_length)
 
+            # if verbose, plot the distribution of the sequence lengths
+            if verbose is True:
+                ax = plot_distribution(self.tp_lengths, self.fp_lengths)
+                ax.savefig(save_path + "/classification_sequence_length_distribution.jpg")
 
-
-
-            #    # error capturing
-            #    try:
-            #
-            #         # TODO: for each labeled day of year and satellite, get matching from validation_directories
-            #         # will assume that the variable is called image_files
-            #         # get the satellite name, ground station name and create an id
-            #         sat_name = d.split("__")[1]
-            #         ground_station_name = d.split("__")[0]
-            #         pass_id = ground_station_name + "__" + sat_name
-            #
-            #         # get the image files in the directory
-            #         base_path = dir_path + "/" + subdir_path + "/unlabeled"
-            #         image_files = [base_path + "/" + f for f in natsort.natsorted(os.listdir(base_path)) if
-            #                        ".jpg" in f and "302" in f.split("_")[0]] subdir_path=d
-            #         )
-            #
-            #         # NOTE: start predict_sequence
-            #         # TODO: currently assumes that image_files will contain the list of image_files
-            #         # TODO: need to find a way to create list of the image paths as image_files variable
-            #         # window creation does not depend on the model prediction
-            #         # but only on the amount of windows/images to predict over
-            #         #image_files = [] # TODO: placeholder
-            #         #window_start = list(range(len(image_files)))
-            #         #window_end = list(map(lambda x: x + self.window_size - 1, window_start))
-            #         #windows = list(zip(window_start, window_end))
-            #
-            #         #try:
-            #          #   classification, classification_confidence, classification_bool = self.model.predict_sequences(image_files)
-            #         #except Exception as e:
-            #         #    print("Error encountered when predicting!")
-            #         #    if e is KeyboardInterrupt:
-            #         #        break
-            #
-            #         # NOTE: end predict_sequence function
-            #
-            #         # NOTE: start generate ground truth sequences function
-            #         # TODO: utilize functions in Data class to read data from file
-            #         # # now we need to load in the original data (float data) that contains the second of day
-            #         # # and other data needed for visualization and metrics reporting
-            #
-            #         # TODO: get the name/location of the file dynamically
-            #         #ground_station_name = "ahup" # TODO: Placeholder
-            #         #sat_name = "G07" # TODO: Placeholder
-            #         #sat = "../data/hawaii/2012/302/" + ground_station_name + "3020.12o_" + sat_name + ".txt" # TODO: Placeholder
-            #
-            #
-            #         #df = Data.read_data_from_file(sat)
-            #         #df = Transform.sod_to_timestamp(df) # this should be the same as before now
-            #
-            #         #
-            #         # # get the day of year of the period for use with the ground truth
-            #         # doy = datetime.datetime.utcfromtimestamp(df.index.values[
-            #         #                                              0].tolist() / 1e9).timetuple().tm_yday  # assumes period is entirely contained within a day
-            #         #
-            #         # # identify continuous periods as we do when we generate the images and prep the data
-            #         # events = np.split(df, np.where(np.isnan(df))[0])
-            #         # events = [ev[~np.isnan(ev)] for ev in events if not isinstance(ev, np.ndarray)]
-            #         # events = [ev.dropna() for ev in events if
-            #         #           not ev.empty and ev.shape[0] > 100]  # NOTE: 100 minute filter to remove short periods
-            #         #
-            #         # # like the code that generates the "events", we will determine the predicted
-            #         # # sequence of anomalies and record whether or not they are true positives
-            #         #
-            #         # # For simplicity, we do not make scoring adjustments based on
-            #         # # how early an anomaly was detected or the distance between false
-            #         # # positives and labeled regions
-            #         # ground_truth = [
-            #         #     ground_truth_labels[str(doy)][sat_name]["start"],
-            #         #     ground_truth_labels[str(doy)][sat_name]["finish"]
-            #         # ]
-            #         #
-            #         # # for now assume events is length 1 # TODO fix later
-            #         # event = events[0].reset_index()
-            #         #
-            #         # ground_truth_sequence = event[
-            #         #     (event["sod"] >= ground_truth[0]) & (event["sod"] <= ground_truth[1])].index.values
-            #         #
-            #         # # adjust the sequence for the window size used earlier tp generate the images
-            #         # # TODO: hard coded, make dynamic
-            #         # adjusted_ground_truth_sequence = [x - self.window_size for x in ground_truth_sequence]
-            #
-            #         # NOTE end get ground truth sequence function
-            #
-            #         # TODO: get the sequences of the anomalous values (make this a function in Model class)
-            #
-            #         # TODO: get the true positives, etc.
-            #         # TODO: assumes that adjusted_ground_sequence and anom_sequences have the same behavior in model.py
-            #         #adjusted_ground_truth_sequence = [] # TODO: placeholder
-            #         #anom_sequences = [] # TODO: placeholder
-            #         #tp, fn, fp, sub_tp_lens, sub_fp_lens = confusion_matrix_classification(adjusted_ground_truth_sequence, anom_sequences)
-            #
-            #         #self.tp += tp
-            #         #self.fn += fn
-            #         #self.fp += fp
-            #         #self.tp_lengths += sub_tp_lens
-            #         #self.fp_lengths += sub_fp_lens
-            #
-            #         # TODO: fill in the parameters for plot_classification
-            #         # TODO: might want to change the path
-            #         #if verbose:
-            #             #fig = plot_classification()
-            #             #fig.savefig(save_path + '/')
-            #
-            #     except Exception as e:
-            #
-            #         # if keyboard interrupt break
-            #         if e is KeyboardInterrupt:
-            #             break
-            #         # else continue
-            #         logging.warning(RuntimeWarning, str(e))
-            #         continue
-            #
-            # # TODO: calculate and report the validation metrics
-            #
-            #
-            # # TODO: if verbose plot dist plot
-            # # # check parameters
-            # # if verbose is True:
-            # #     ax = plot_distribution(self.tp_lengths, self.fp_lengths)
-            # #     ax.savefig(save_path + "/classification_sequence_length_distribution.jpg")
+            logging.info("Out of sample validation complete.")
 
     def run(self, verbose: bool = False) -> None:
 
@@ -697,8 +549,8 @@ class Experiment:
         # interpret the results
         interp = ClassificationInterpretation.from_learner(self.model.learner)
 
+        # calculate the confusion matrix and get the scores
         cm = interp.confusion_matrix()
-
         results = confusion_matrix_scores(cm)
 
         # track results in the Hyperdash experiment
@@ -720,7 +572,7 @@ class Experiment:
             interp.plot_top_losses(9, figsize=(15, 11))
             interp.plot_confusion_matrix(figsize=(4, 4), dpi=120)
 
-        # TODO: # # as part of the Experiment, perform an out-of-sample (OOS) validation of the results
+        # as part of the Experiment, perform an out-of-sample (OOS) validation of the results
         self._out_of_sample(verbose=verbose)
 
         # end the experiment
