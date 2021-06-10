@@ -196,8 +196,7 @@ Stand-Alone GNSS Receiver: A Preliminary Feasibility Demonstration.
 Savastano G., et. al.. Nature Scientific Reports, 2017. [PDF](https://www.nature.com/articles/srep46607.pdf).
 * Detecting Spacecraft Anomalies Using LSTMs and Nonparametric Dynamic Thresholding. Hundman K., et. al. 
 Knowledge Discovery and Data Mining (KDD), 2018. [PDF](https://dl.acm.org/doi/pdf/10.1145/3219819.3219845).
-* Imaging Time-Series to Improve Classification and Imputation. Whang Z., Oats T. 
-2015. [PDF](https://arxiv.org/pdf/1506.00327.pdf).
+* Imaging Time-Series to Improve Classification and Imputation. Whang Z., Oats T. 2015. [PDF](https://arxiv.org/pdf/1506.00327.pdf).
 
 ## Contributors
 - [NASA Jet Propulsion Laboratory](https://jpl.nasa.gov/)
