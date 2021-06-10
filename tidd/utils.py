@@ -140,7 +140,7 @@ class Transform:
         :return: A list of ground station and satellite combination.
         """
 
-        combinations = list(set(["_".join(x.split("_")[0:3]) for x in dataframe.columns.values]))
+        combinations = list(set(["_".join(x.split("_")[0:3]) for x in dataframe.columns.values if "sod" not in x]))
 
         return combinations
 
@@ -181,16 +181,26 @@ class Transform:
             # get the start time of the sat and the end time
             anom_range = [labels[str(doy)][sat]["start"], labels[str(doy)][sat]["finish"]]
 
+            # logging.info("------------")
+            # logging.info(doy)
+            # logging.info(sat)
+            # logging.info(anom_range)
+            #
+            # logging.info(period[["sod", combo]].head())
+            # logging.info(period[["sod", combo]].tail())
+            # logging.info(period.shape)
+
             # process all the windows
             for idx in list(range(period.shape[0])):
 
                 # get subsetted window
                 subset = period.iloc[idx:idx + window_size, :]
+                
+                # logging.info(subset.shape)
 
                 # if the data is smaller than the window size, do not process
                 if subset.shape[0] < window_size:
-                    pass
-
+                    continue
                 else:
 
                     # now generate the field
@@ -202,6 +212,13 @@ class Transform:
                     ax = gramian_angular_field(
                         X_new
                     )
+
+                    # logging.info("---------------------------------")
+                    # logging.info("anom start: " + str(anom_range[0]))
+                    # logging.info("anom finish: " + str(anom_range[1]))
+                    # logging.info("period most recent: " + str(period.iloc[idx]["sod"] + window_size))
+                    # logging.info("period most recent: " + str(period.iloc[idx]["sod"] + window_size))
+                    # # logging.info((period.iloc[idx]["sod"] + window_size) in list(range(anom_range[0], anom_range[1])))
 
                     # save to a particular path based on if we are within the anomalous range
                     if (period.iloc[idx]["sod"] + window_size) in list(range(anom_range[0], anom_range[1])):
@@ -420,7 +437,8 @@ class Data:
                                paths["/".join(str(p).split("/")[:-3])]["type"])) for p in all_paths_flat]
 
         tqdm_out = TqdmToLogger(logger, level=logging.INFO)
-        pool = mp.Pool(os.cpu_count() - 1)  # to keep the system alive yo
+        # pool = mp.Pool(os.cpu_count() - 1)  # to keep the system alive yo
+        pool = mp.Pool(4)  # to keep the system alive yo
 
         with pool as pp:
 
