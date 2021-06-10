@@ -490,7 +490,8 @@ class Experiment:
                             pass_id,
                             labels[location][str(doy_for_location)][sat],
                             classification_bool,
-                            classification_confidence
+                            classification_confidence,
+                            window_size_adjustment=self.window_size
                         )
                         fig.savefig(save_path + '/' + pass_id + '_classification_plot.png')
                         plt.close(fig)

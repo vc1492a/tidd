@@ -1,5 +1,8 @@
+"""
+A collection of functions related to plotting modeling and experimental results.
+"""
+
 # imports
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -10,7 +13,10 @@ import seaborn as sns
 
 def gramian_angular_field(array: Union[pd.Series, np.array, list]) -> plt.figure:
     """
-    # TODO:
+    Generates a plot for a set of data containing a Gramian Angular Field (GAF) and returns the
+    figure for later manipulation.
+    :param array: a Pandas Series or Numpy Array containing data representative of a Gramian Angular Field (GAF).
+    :return: a matplotlib.pyplot figure.
     """
 
     figure = plt.figure(figsize=(5, 5), frameon=False)
@@ -32,15 +38,10 @@ def gramian_angular_field(array: Union[pd.Series, np.array, list]) -> plt.figure
 
 def plot_distribution(tp_lengths: list, fp_lengths: list) -> sns.FacetGrid:
     """
-    creates the plot of visualizing the distribution of true and false positives
-    :input: list of true positive sequences
-    :input: list of false positive sequences
-    :input save_path: place where to save the image of the plot
-
-    # TODO: update docstring
-
-    :return plot:
-
+    Creates the plot of visualizing the distribution of true and false positives
+    :param tp_lengths: list of true positive sequences
+    :param fp_lengths: list of false positive sequences
+    :return: a Seaborn FacetGrid object.
     """
     # first organize the data into a dataframe
     rows = list()
@@ -63,28 +64,27 @@ def plot_distribution(tp_lengths: list, fp_lengths: list) -> sns.FacetGrid:
     return ax
 
 
-# TODO: move to plotting class / file
 def plot_classification(event: pd.DataFrame,
-                            pass_id: str,
-                            sat_annotation: dict,
-                            classification_bool: list,
-                            classification_confidence: list,
-                            save_path: Union[str, Path] = "./output"
-                            ) -> plt.figure:
+                        pass_id: str,
+                        sat_annotation: dict,
+                        classification_bool: list,
+                        classification_confidence: list,
+                        window_size_adjustment: int = 60
+                        ) -> plt.figure:
     """
-    Creates 3 plots
+    Creates 3 plots:
     Plot of the time series data with markings of the start and end of the anomalous sequence
     Plot of the predictions for each sequence 1 hour
     Plot of the confidence levels for each of the predictions
 
-    # TODO: update docstring
-
-    :input event: DataFrame containing the float data
-    :input pass_id: string containing the satellite and ground station
-    :input sat_annotation: dictionary containing the start and end of the anomalous sequence
-    :input classification_bool: classification of each time step
-    :input classification_confidence: confidence of the classification at each time step
-    :input save_path: path where the plot images need to be saved
+    :param event: DataFrame containing the float data
+    :param pass_id: string containing the satellite and ground station
+    :param sat_annotation: dictionary containing the start and end of the anomalous sequence
+    :param classification_bool: classification of each time step
+    :param classification_confidence: confidence of the classification at each time step
+    :param window_size_adjustment: an integer that represents how much to adjust the float data when plotting. Should
+    match the window_size used in image data generation, experiments and modeling.
+    :return: a matplotlib.pyplot figure.
     """
     # combined "detection evaluation" plot
     fig, axs = plt.subplots(3, sharex=False, sharey=False, figsize=(12, 4))
@@ -95,8 +95,7 @@ def plot_classification(event: pd.DataFrame,
 
     axs[0] = plt.subplot(gs[0])
 
-    # TODO: NOTE the adjustment below for the window size, make dynamic
-    sns.lineplot(data=event.iloc[59:, :], x="sod", y=pass_id, ax=axs[0])
+    sns.lineplot(data=event.iloc[window_size_adjustment - 1:, :], x="sod", y=pass_id, ax=axs[0])
     axs[0].set(yticklabels=[])
     axs[0].axvline(x=sat_annotation["start"], linestyle="dotted")  # start
     axs[0].axvline(x=sat_annotation["finish"], linestyle="dotted")  # approx end - 30 minutes later
@@ -122,5 +121,3 @@ def plot_classification(event: pd.DataFrame,
                         hspace=0.5)
 
     return fig
-
-    
