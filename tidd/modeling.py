@@ -376,7 +376,7 @@ class Experiment:
             # process each of the directories in the validation set
             for d in tqdm(image_directories, file=tqdm_out, total=len(image_directories), mininterval=10, disable=operator.not_(verbose)):
             
-                logging.info(d)
+                #logging.info(d)
         
                 # get the satellite amd ground station from the path 
                 ground_station = d.split("__")[0].split("/")[-1]
@@ -520,8 +520,8 @@ class Experiment:
                 # make pretty plots!
                 if verbose:
 
-                    logging.info(classification_bool[0:5])
-                    logging.info(classification_confidence[0:5])
+                    #logging.info(classification_bool[0:5])
+                    #logging.info(classification_confidence[0:5])
 
                     fig = plot_classification(
                         event,
