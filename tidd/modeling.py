@@ -17,6 +17,7 @@ import glob
 from hyperdash import Experiment as HyperdashExperiment
 import json
 import logging
+import matplotlib.pyplot as plt
 import natsort
 import numpy as np
 import operator
@@ -25,6 +26,7 @@ from pathlib import Path
 import sys
 from tidd.metrics import confusion_matrix_scores, calculating_coverage, \
     precision_score, recall_score, f1_score, confusion_matrix_classification
+from tidd.plotting import plot_classification
 from tidd.utils import Data, TqdmToLogger, Transform
 import torch
 from tqdm import tqdm
@@ -135,7 +137,7 @@ class Model:
         :output: np.ndarray of confidence values
         """
         prediction = self.learner.predict(test_item)
-        return prediction[0], prediction[2].cpu().detach().numpy()
+        return prediction[0], np.max(prediction[2].cpu().detach().numpy())
 
     def predict_sequences(self, test_items_list: list) -> tuple:
         """
@@ -379,7 +381,7 @@ class Experiment:
                 # get the satellite amd ground station from the path 
                 ground_station = d.split("__")[0].split("/")[-1]
                 sat = d.split("__")[1].split("/")[0]
-                combo_key = ground_station + "__" + sat
+                pass_id = ground_station + "__" + sat
 
                 # get the images in the directory 
                 image_files = [d + "/" + f for f in
@@ -406,19 +408,30 @@ class Experiment:
                     if doy in labels[location].keys():
                         image_files_with_labels.append(i)
 
-                logging.info(len(image_files_with_labels))
+               # logging.info(len(image_files_with_labels))
 
                 # for the sorted images in the directory, predict the sequence
                 try:
                     classification, classification_confidence, classification_bool = self.model.predict_sequences(image_files_with_labels)
+
+            # establish a logger
                 except Exception as ex:
                     logging.warning(RuntimeWarning, "Error encountered when predicting sequence.")
                     logging.warning(str(ex))
                     if ex is KeyboardInterrupt:
                         break
                     continue
-                    
-                logging.info(len(classification))
+                
+                # get the indices of the anomalous values
+                anom_idx = np.where(np.array(classification_bool) == 1)
+                # get the sequences of the anomalous values
+                anom_sequences = Transform.group_consecutives(list(anom_idx[0])) 
+
+                #logging.info(anom_sequences)
+
+                #logging.info(len(anom_sequences))
+
+                #logging.info(len(classification))
                     
                 # we need to load in the original data file (float data) that contains the second of day 
                 # using the doy and sat of first image load in the data file 
@@ -441,12 +454,12 @@ class Experiment:
                     if doy_for_location in i and location in i and sat in i and ground_station in i:
                         file_path = i
 #
-                logging.info(file_path)
+      #          logging.info(file_path)
 
                 df = Data.read_data_from_file(file_path)
 
-                logging.info(df.head())
-                logging.info(df.shape)
+    #            logging.info(df.head())
+     #           logging.info(df.shape)
 
                 # todo: refactor below 
                 year = 2012
@@ -470,31 +483,79 @@ class Experiment:
                     min_sequence_length=100
                 )
 
-                logging.info(len(events))
+   #             logging.info(len(events))
 
-                logging.info(events[0].shape)
+  #              logging.info(events[0].shape)
 
-                logging.info(sat)
+ #               logging.info(sat)
 
-                event = events[0]
+                event = events[0].reset_index()
 
-                logging.info(event.head())
-                logging.info(event.columns.values)
+#                logging.info(event.head())
+#                logging.info(event.columns.values)
 
                 ground_truth_sequence = event[
-                    (event["sod"] >= labels[location][doy_for_location][sat]["start"]) & (event["sod"] >= labels[location][day_of_location][sat]["finish"])        
+                    (event["sod"] >= labels[location][doy_for_location][sat]["start"]) & (event["sod"] >= labels[location][doy_for_location][sat]["finish"])        
                 ].index.values
 
                 # adjust the sequence for the window size used to generate the images 
-                adjusted_ground_truth_sequence = [x - self.window_size for x in ground_trith_sequences]
+                adjusted_ground_truth_sequence = [x - self.window_size for x in ground_truth_sequence]
 
-                logging.info(adjusted_ground_truth_sequences)
+                #logging.info(adjusted_ground_truth_sequence)
 
+                #logging.info(len(adjusted_ground_truth_sequence))
 
+                # Obtain the true positives, false negatives, and false positives
+                tp, fn, fp, tp_lengths, fp_lengths = confusion_matrix_classification(
+                    adjusted_ground_truth_sequence, # note: currently assumes one ground truth sequence in period 
+                    anom_sequences
+                )
 
-                # 
+                self.tp += tp
+                self.fn += fn 
+                self.fp += fp
+                [self.tp_lengths.append(tpl) for tpl in tp_lengths]
+                [self.fp_lengths.append(fpl) for fpl in fp_lengths]
                 
-                
+                # make pretty plots!
+                if verbose:
+
+                    logging.info(classification_bool[0:5])
+                    logging.info(classification_confidence[0:5])
+
+                    fig = plot_classification(
+                        event,
+                        pass_id,
+                        labels[location][str(doy_for_location)][sat],
+                        classification_bool,
+                        classification_confidence
+                    )
+                    fig.savefig(save_path + '/' + pass_id + '_classification_plot.png')
+                    plt.close(fig)
+                        
+                if self.save_path is not None:
+                    try:
+                        save_df = event.iloc[59:].copy()
+                        save_df['anomaly'] = classification_bool
+                        save_df['confidence'] = classification_confidence
+                        save_df.to_csv(save_path + "/" + pass_id + '_results.csv')
+                    except FileNotFoundError:
+                        logging.info('Save Path "' + save_path + "/" + pass_id + '_results.csv' + '" not valid')
+
+            # calculate validation metrics
+            precision = precision_score(self.tp, self.fp)
+            recall = recall_score(self.tp, self.fn)
+            f_score = f1_score(precision, recall)
+
+            precision = self.exp.metric("validation_precision", precision)
+            recall = self.exp.metric("validation_recall", recall)
+            f_score = self.exp.metric("validation_f1_score", f_score)
+
+            tp_sequence_length = np.mean(self.tp_lengths)
+            tp_sequence_length = self.exp.metric("tp_sequence_length", tp_sequence_length)
+
+            fp_sequence_length = np.mean(self.fp_lengths)
+            fp_sequence_length = self.exp.metric("fp_sequence_length", fp_sequence_length) 
 
 
 
