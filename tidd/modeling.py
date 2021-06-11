@@ -363,6 +363,8 @@ class Experiment:
             # filter for those containing "unlabeled"
             image_directories = [i for i in image_directories if "unlabeled" in i]
 
+            # TODO: create label object
+
             # read in labels 
             labels_path = self.validation_data_path.split(self.name)[0] + "/" + self.name + "/tid_start_finish_times.json"
             with open(labels_path, "rb") as f_in:
@@ -435,6 +437,7 @@ class Experiment:
                     for i in file_paths:
                         if doy_for_location in i and location in i and sat in i and ground_station in i:
                             file_path = i
+                            break
 
                     # read the original data file (pre-image)
                     df = Data.read_data_from_file(file_path)
