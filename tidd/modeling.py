@@ -572,7 +572,7 @@ class Experiment:
         self.exp.metric("recall", results[2])
         self.metrics["training_recall"] = results[2]
         self.exp.metric("f1_score", results[3])
-        self.metrics["training_f1_score"] = results[4]
+        self.metrics["training_f1_score"] = results[3]
 
         # calculate the coverage
         predictions, targets = self.model.learner.get_preds()  # by default uses validation set
