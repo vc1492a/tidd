@@ -12,6 +12,7 @@ data.tar.gz
 */.ipynb_checkpoints/*
 proposals
 documents
+tests/*/
 
 #vscode files
 .vscode/*

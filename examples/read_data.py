@@ -3,36 +3,42 @@ In this file, we show how one can read data from a particular time period for us
 """
 
 # imports #
-from tidd.utils import Data
+import matplotlib.pyplot as plt
+import seaborn as sns
+from tidd.utils import Data, Transform
 
 if __name__ == '__main__':
 
-    location = "hawaii" # can be hawaii or chile
-    year = 2012 # 2015 for chile, 2012 for hawaii
-    day_of_year = 302 # 290-304 for hawaii, 259 for chile
-
     # try to read data from a specific location
-    df = Data().read_day(
-        location=location,
-        year=year,
-        day_of_year=day_of_year,
-        verbose=True
+    df = Data.read_data_from_file(
+        file_name="../data/chile/2015/259/aeda2590_G24.txt"
     )
 
-    print(df.sample(frac=1).head())
+    # print(df.head())
+    # print(df.tail())
 
-    print(df.shape)
-
-    # read multiple days of data
-    days = list(range(290, 305))
-
-    df_all_days = Data().read_days(
-        location=location,
-        year=year,
-        days=days,
-        verbose=True
+    # convert sod to timestamp
+    df = Transform.sod_to_timestamp(
+        df,
+        year=2015,
+        day_of_year=259
     )
 
-    print(df_all_days.sample(frac=1).head())
+    # resample to 1 min # TODO (low priority): expose as parameter through Experiment
+    df = df.resample("1min").mean()
 
-    print(df_all_days.shape)
+    # transform values by first getting the individual events
+    events = Transform().split_by_nan(
+        dataframe=df,
+        min_sequence_length=100
+    )
+
+    print(len(events))
+
+    print(events[1].tail())
+
+    sns.lineplot(data=events[1], x="sod", y="aeda__G24")
+    plt.show()
+
+
+
