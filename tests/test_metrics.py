@@ -87,3 +87,36 @@ def test_f1() -> None:
 
     f1_score2 = f1_score(0, 0)
     assert f1_score2 == 0
+
+
+def test_confusion_matrix_classification() -> None:
+    """
+    Test the confusion_matrix_classification function
+    """
+
+    # construct a toy example for the test
+    anom_range = list(range(7800, 8600))
+    classifications = [
+        list(range(1000, 2000)),
+        list(range(8000, 8500)),
+    ]
+    # perform the classification
+    tp, fn, fp, tp_lengths, fp_lengths = confusion_matrix_classification(
+        adjusted_ground_truth_sequence=anom_range,
+        anom_sequences=classifications
+    )
+
+    # ensure the format of the responses are correct
+    assert type(tp) in [float, int]
+    assert type(fn) in [float, int]
+    assert type(fp) in [float, int]
+    assert type(tp_lengths) == list
+    assert type(fp_lengths) == list
+
+    # ensure we get the desired number
+    assert fn == 0
+    assert fp == 1
+    assert tp == 1
+    assert tp_lengths == [500]
+    assert fp_lengths == [1000]
+

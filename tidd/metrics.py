@@ -132,7 +132,6 @@ def confusion_matrix_classification(adjusted_ground_truth_sequence: list, anom_s
     """
 
     tp = 0
-    fn = 0
     fp = 0
     tp_lengths = list()
     fp_lengths = list()
