@@ -164,10 +164,6 @@ class Transform:
 
         for period in tqdm(events, file=tqdm_out, total=len(events), mininterval=3, disable=operator.not_(verbose)):
 
-            #logging.info("-----------------")
-            #logging.info(period.head())
-            #logging.info(period.shape)
-
             # get the doy
             doy = period.index[0].dayofyear
 
@@ -185,46 +181,14 @@ class Transform:
             # get the start time of the sat and the end time
             anom_range = [labels[str(doy)][sat]["start"], labels[str(doy)][sat]["finish"]]
 
-            # logging.info("------------")
-            # logging.info(doy)
-            # logging.info(sat)
-            # logging.info(anom_range)
-            #
-            # logging.info(period[["sod", combo]].head())
-            # logging.info(period[["sod", combo]].tail())
-            # logging.info(period.shape)
-
             # process all the windows
             for idx in list(range(period.shape[0])):
 
                 # get subsetted window
-                
-                #logging.info("----------")
-                #logging.info(period.tail())
-           
-                # TODO: 
-                #logging.info(str(idx) + " " + str(idx+window_size))
                 subset = period.iloc[idx:idx + window_size, :]
-           
-                #logging.info(subset.tail())
-
-                #if subset["sod"].values[0] > 80000:
-
-                    #logging.info("---------------------------")
-                    #logging.info(subset.head(1))
-                    #logging.info(subset.tail(1))
-        
-                    #logging.info(subset.shape)
 
                 # if the data is smaller than the window size, do not process
-                
-                #logging.info("\n---------")
-                #subset[]
-                #logging.info(subset.shape)
-                
                 if subset.shape[0] >= window_size:
-                 
-                    #logging.info(subset.tail())
 
                     # now generate the field
                     X_new = Transform().data_to_image(
@@ -235,13 +199,6 @@ class Transform:
                     ax = gramian_angular_field(
                         X_new
                     )
-
-                    #logging.info("---------------------------------")
-                    #logging.info("anom start: " + str(anom_range[0]))
-                    #logging.info("anom finish: " + str(anom_range[1]))
-                    #ogging.info("subset most recent: " + str(subset["sod"].values[-1]))
-                    #logging.info("period most recent: " + str(period.iloc[idx]["sod"] + window_size))
-                    #logging.info(int(subset["sod"].values[-1]) in list(range(anom_range[0], anom_range[1])))
 
                     # save to a particular path based on if we are within the anomalous range
                     if (int(subset["sod"].values[-1])) in list(range(anom_range[0], anom_range[1])):
@@ -461,7 +418,6 @@ class Data:
 
         tqdm_out = TqdmToLogger(logger, level=logging.INFO)
         pool = mp.Pool(os.cpu_count() - 1)  # to keep the system alive yo
-        #pool = mp.Pool(1)  # to keep the system alive yo
 
         with pool as pp:
 

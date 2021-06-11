@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 import random
 import shutil
-from tidd.utils import Data, Transforms
+from tidd.utils import Data, Transform
 import os
 
 
@@ -20,11 +20,8 @@ def test_fixed_data() -> pd.DataFrame:
     """
 
     # read data
-    df = Data().read_day(
-        location="hawaii",
-        year=2012,
-        day_of_year=302,
-        verbose=True
+    df = Data.read_data_from_file(
+        "./data/hawaii/2012/302/ahup3020.12o_G20.txt"
     )
 
     return df
@@ -73,84 +70,24 @@ def test_random_data() -> 'str':
     os.rmdir('/'.join(file_path[:-3]))
 
 
-def test_read_data_day(test_random_data) -> None:
+def test_transform_sod_to_timestamp(test_fixed_data) -> None:
     """
-    Tests whether the read_day function reads the appropriate year and day
-    of year of data, and that it returns the data in the appropriate format.
+    Tests whether the sod_to_timestamp returns the expected values.
     :return: None
     """
 
-    file_path = test_random_data.split('/')
-
-    s = tuple((int(file_path[3]), int(file_path[4]), file_path[2]))
-
-    # try to read data from a specific location
-    df = Data().read_day(
-        location=s[2],
-        year=s[0],
-        day_of_year=s[1],
-        verbose=True
-    )
-
-    # check to ensure that the returned data is a dataframe
-    assert isinstance(df, pd.DataFrame)
-
-    # check to ensure that the index is a Pandas DateTimeIndex
-    assert type(df.index).__name__ == "DatetimeIndex"
-
-    # check that the day corresponds to the correct day of year
-    random_date = random.choice(pd.to_datetime(df.index.values))
-    assert random_date.dayofyear == s[1]
-    assert random_date.year == s[0]
-
-    # check that the column count is the same across data types
-    cols = ["_lat", "_lon", "_h_ipp", "_ele", "_azi"]
-    counts = list()
-    columns = list(df.columns.values)
-    for c in cols:
-        type_cols = [col for col in columns if c in col]
-        counts.append(len(type_cols))
-
-    assert all(x == counts[0] for x in counts)
-
-
-def test_read_data_days(test_random_data) -> None:
-    """
-    Tests whether the read_days function reads the appropriate year and days
-    of year of data, and that it returns the data in the appropriate format.
-    :return: None
-    """
-
-    days = [300, 301]
-
-    # first read in the data
-    df = Data().read_days(
-        location="hawaii",
+    # add timestamps
+    test_fixed_data = Transform.sod_to_timestamp(
+        test_fixed_data,
         year=2012,
-        days=days,
-        verbose=True
+        day_of_year=302
     )
 
-    # check to ensure that the returned data is a dataframe
-    assert isinstance(df, pd.DataFrame)
+    # check that the index is a datetime index
+    assert type(test_fixed_data.index) == pd.DatetimeIndex
 
-    # check to ensure that the index is a Pandas DateTimeIndex
-    assert type(df.index).__name__ == "DatetimeIndex"
-
-    # check that the day corresponds to the correct day of year
-    random_date = random.choice(pd.to_datetime(df.index.values))
-    assert random_date.dayofyear in days
-    assert random_date.year == 2012
-
-    # check that the column count is the same across data types
-    cols = ["_lat", "_lon", "_h_ipp", "_ele", "_azi"]
-    counts = list()
-    columns = list(df.columns.values)
-    for c in cols:
-        type_cols = [col for col in columns if c in col]
-        counts.append(len(type_cols))
-
-    assert all(x == counts[0] for x in counts)
+    # check that sod is in the column values
+    assert "sod" in list(test_fixed_data.columns.values)
 
 
 def test_transform_split_by_nan(test_fixed_data) -> None:
@@ -160,7 +97,7 @@ def test_transform_split_by_nan(test_fixed_data) -> None:
     """
 
     # get the combinations of ground stations and satellites
-    combinations = Transforms().get_station_satellite_combinations(
+    combinations = Transform()._get_station_satellite_combinations(
         dataframe=test_fixed_data
     )
 
@@ -169,11 +106,19 @@ def test_transform_split_by_nan(test_fixed_data) -> None:
 
     # select the first set of data as an example
     station_sat = combinations[0]
+
+    # add timestamps
+    test_fixed_data = Transform.sod_to_timestamp(
+        test_fixed_data,
+        year=2012,
+        day_of_year=302
+    )
+
     df_model = test_fixed_data.filter(regex=station_sat, axis=1).resample("1min").mean()  # resample by mean
 
     # transform values by first getting the individual events
     min_sequence_length = 100
-    events = Transforms().split_by_nan(
+    events = Transform().split_by_nan(
         dataframe=df_model,
         min_sequence_length=min_sequence_length
     )
@@ -191,7 +136,7 @@ def test_transform_get_station_satellite_combinations(test_fixed_data) -> None:
     """
 
     # get the combinations of ground stations and satellites
-    combinations = Transforms().get_station_satellite_combinations(
+    combinations = Transform()._get_station_satellite_combinations(
         dataframe=test_fixed_data
     )
 
@@ -210,20 +155,26 @@ def test_transform_generate_images(test_fixed_data) -> None:
     """
 
     # get the combinations of ground stations and satellites
-    combinations = Transforms().get_station_satellite_combinations(
+    combinations = Transform()._get_station_satellite_combinations(
         dataframe=test_fixed_data
     )
 
     # we only have some combinations for testing
     combinations = [x for x in combinations if "G20" in x]
 
+    # add timestamps
+    df_model = Transform.sod_to_timestamp(
+        test_fixed_data,
+        year=2012,
+        day_of_year=302
+    )
+
     # select the first set of data as an example
-    station_sat = combinations[0]
-    df_model = test_fixed_data.filter(regex=station_sat, axis=1).resample("1min").mean()  # resample by mean
+    df_model = df_model.resample("1min").mean()  # resample by mean
 
     # transform values by first getting the individual events
     min_sequence_length = 100
-    events = Transforms().split_by_nan(
+    events = Transform().split_by_nan(
         dataframe=df_model,
         min_sequence_length=min_sequence_length
     )
@@ -231,22 +182,36 @@ def test_transform_generate_images(test_fixed_data) -> None:
     # continue transforming by converting the float data into images
     labels = {
         "302": {
-            "G04": 31400,
-            "G07": 31160,
-            "G08": 31900,
-            "G10": 29900,
-            "G20": 31150
+            "G04": {
+                "start": 31400,
+                "finish": 33200
+            },
+            "G07": {
+                "start": 31160,
+                "finish": 32960
+            },
+            "G08": {
+                "start": 31900,
+                "finish": 33700
+            },
+            "G10": {
+                "start": 29900,
+                "finish": 31700
+            },
+            "G20": {
+                "start": 31150,
+                "finish": 32950
+            }
         }
     }
 
     pth = "./tests"
 
-    Transforms().generate_images(
+    Transform().generate_images(
         events=events,
         labels=labels,
         output_dir=pth,
         window_size=60,
-        event_size=30,
         verbose=True
     )
 
