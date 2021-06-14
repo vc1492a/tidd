@@ -1,12 +1,38 @@
-# Toolkit for Ionospheric Disturbance Detection (TIDD)
+## Toolkit for Ionospheric Disturbance Detection (TIDD)
 
-The toolkit for the detection of Traveling Ionospheric Disturbances (TIDs) in the Earth's atmosphere as a result of 
+A toolkit for the detection of Traveling Ionospheric Disturbances (TIDs) in the Earth's atmosphere as a result of 
 tsunami waves, earthquakes, large explosions and other phenomena. A collaboration between individuals and teams the 
 NASA Jet Propulsion Laboratory (JPL), Sapienza University of Rome and the University of California - Los Angeles (UCLA). 
 
 [![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/archive/0.1.0.tar.gz)
 [![Language](https://img.shields.io/badge/python-3.8-blue)](#)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+## About 
+
+**Top-Down View of TIDs Detected by Satellite over Hawaii**
+![TIDs_hawaii](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/blob/main/images/geoplot_gopm_light.png)
+
+Tsunamis can trigger internal gravity waves (IGWs) that are able to propagate to the ionosphere, causing a perturbation in the natural Total Electron Content (TEC). 
+These perturbations are often referred as Traveling Ionospheric Disturbances (TIDs) and are easily detectable through 
+the Global Navigation Satellite System (GNSS) signal. The perturbation in the below image is generated 
+by a TID. 
+
+**GOPM Ground Station G07 Satellite slant Total Electron Content (sTEC) data**
+![gopm G07 doy](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/blob/main/images/gopm_G07_doy.png)
+
+The large quantity of GNSS data currently available allows us to explore the possibility of using deep learning methods 
+for TID detection. This toolkit demonstrates the effectiveness of training a convolutional neural network (CNN) to 
+detect signs of IGWs. The approach utilized in this toolkit employs Gramian Angular Difference Fields (GADFs) to 
+encode the time-series as images for model training. 
+
+**Animation of GADFs over TIDs**
+![TIDs GADF](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/blob/main/images/anom.gif)
+
+In a real-time system, slant Total Electron Content (sTEC) may be calculated, windowed, converted 
+to an image using GADFs and fed into a model for predicting whether a TID is present and occurring. 
+Currently, simple experiments show conversion from float data to a prediction takes 
+approximately 1.1. seconds. 
 
 ## Getting Started 
 
@@ -15,7 +41,7 @@ dependencies and then install the library. Then, pull the appropriate
 branch and then install: 
 
 ```
-pip install . -e
+pip install . 
 ```
 
 Make sure to check out the `notebooks` and `data` directories 
@@ -71,17 +97,17 @@ curl -O https://tsunami-detection.s3-us-west-1.amazonaws.com/data.tar.gz && tar 
 ```
 
 Data used for experiments is located in `data/experiments`, while raw historical 
-data is available in the `chile` and `hawaii` directories. 
+data is available in the `chile` and `hawaii` directories. The data is also used in a variety of tests. 
 
 ### About the Data
 
 In every folder, you find a file for each satellite in view from a GPS 
-station: so you have the value of the slant total electron content 
+station. The value of the slant total electron content 
 (sTEC) encountered by the GPS signal during its path in the ionosphere 
-from the satellite (e.g G10) to the GPS receiver (e.g ahup) for every 
-day.
+from the satellite (e.g G10) to the GPS receiver (e.g ahup) is available 
+for select days of the year.
 
-The files have 7 columns:
+The data files have 7 columns:
 - **Sod**: it represents the second of the day, it is my time array
 - **dStec/dt**: the variations in time of the slant total electron 
 content (the parameter of interest) epoch by epoch (it is like a velocity)
@@ -96,15 +122,13 @@ the sTEC estimations
 don’t consider data with elevation under 20 degrees since they are too 
 noisy)
 
-### Hawaii
+#### Hawaii
  
-The day of the earthquake is 302. We processed 5 days: two days before 
-the earthquake (day 300 and 301), the day of the earthquake (302) and 
-two days after the earthquake (303 and 304).
+The day of the earthquake is 302. Data is available for days of year 290 through 304. 
 
-### Chile 
+#### Chile 
 
-Only a day's worth of data is available for this event. 
+Day of year 259 is available which is the day of the earthquake.
 
 ## Contributing
 
@@ -126,7 +150,7 @@ When contributing, please ensure to run unit tests and add additional tests as
 necessary if adding new functionality. To run the unit tests, use `pytest`: 
 
 ```
-python3 -m pytest --cov=src -vv
+python -m  pytest --cov=tidd --capture=no --log-cli-level=CRITICAL
 ```
 
 This should report the result of your unit tests as well as information 
@@ -135,11 +159,7 @@ about code coverage.
 ### Versioning
 [Semantic versioning](http://semver.org/) is used for this project. 
 If contributing, please conform to semantic versioning guidelines when 
-submitting a pull request. 
-
-**NOTE**: Until relase to the [Python Package Index](https://pypi.org/) 
-(PyPI), we will be incrementing version numbers _prior to_ `0.1.x`. The 
-first release to the PyPI will be version `0.1`. 
+submitting a pull request.
 
 ### Updating the Changelog
 Core contributors are responsible for maintaining `changelog.md` in 
@@ -169,8 +189,6 @@ If citing this work, use the following:
 # TBD
 ```
 
-## References
-
 ### Motivation
 
 * Real-Time Detection of Tsunami Ionospheric Disturbances with a 
@@ -178,6 +196,7 @@ Stand-Alone GNSS Receiver: A Preliminary Feasibility Demonstration.
 Savastano G., et. al.. Nature Scientific Reports, 2017. [PDF](https://www.nature.com/articles/srep46607.pdf).
 * Detecting Spacecraft Anomalies Using LSTMs and Nonparametric Dynamic Thresholding. Hundman K., et. al. 
 Knowledge Discovery and Data Mining (KDD), 2018. [PDF](https://dl.acm.org/doi/pdf/10.1145/3219819.3219845).
+* Imaging Time-Series to Improve Classification and Imputation. Whang Z., Oats T. 2015. [PDF](https://arxiv.org/pdf/1506.00327.pdf).
 
 ## Contributors
 - [NASA Jet Propulsion Laboratory](https://jpl.nasa.gov/)
