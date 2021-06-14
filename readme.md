@@ -11,6 +11,7 @@ NASA Jet Propulsion Laboratory (JPL), Sapienza University of Rome and the Univer
 ## About 
 
 **Top-Down View of TIDs Detected by Satellite over Hawaii**
+
 ![TIDs_hawaii](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/blob/main/images/geoplot_gopm_light.png)
 
 Tsunamis can trigger internal gravity waves (IGWs) that are able to propagate to the ionosphere, causing a perturbation in the natural Total Electron Content (TEC). 
@@ -19,7 +20,8 @@ the Global Navigation Satellite System (GNSS) signal. The perturbation in the be
 by a TID. 
 
 **GOPM Ground Station G07 Satellite slant Total Electron Content (sTEC) data**
-![gopm G07 doy](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/blob/main/images/gopm_G07_doy.png)
+
+![gopm G07 doy](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/blob/main/images/gopm__G07_doy.png)
 
 The large quantity of GNSS data currently available allows us to explore the possibility of using deep learning methods 
 for TID detection. This toolkit demonstrates the effectiveness of training a convolutional neural network (CNN) to 
@@ -27,6 +29,7 @@ detect signs of IGWs. The approach utilized in this toolkit employs Gramian Angu
 encode the time-series as images for model training. 
 
 **Animation of GADFs over TIDs**
+
 ![TIDs GADF](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/blob/main/images/anom.gif)
 
 In a real-time system, slant Total Electron Content (sTEC) may be calculated, windowed, converted 
