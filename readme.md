@@ -133,6 +133,14 @@ The day of the earthquake is 302. Data is available for days of year 290 through
 
 Day of year 259 is available which is the day of the earthquake.
 
+## Performance Statistics
+
+| Metric | Testing Score | Validation Score | 
+| ------- | ------- | ------- | 
+| recall | 97.9% | 100% | 
+| precision | 95.9% | 85.7 % | 
+|F1 Score | 96.9% | 92.3% | 
+
 ## Contributing
 
 Please use the issue tracker to report any erroneous behavior or desired 
