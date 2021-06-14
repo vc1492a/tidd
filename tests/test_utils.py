@@ -27,49 +27,6 @@ def test_fixed_data() -> pd.DataFrame:
     return df
 
 
-@pytest.fixture
-def test_random_data() -> 'str':
-    """
-    fixture that creates the random data for testing
-    with read_data
-    :yield: the file paths of the random data
-    """
-    path = './data/test'
-    year_path = path + '/2012'
-    day_path = year_path + '/300'
-    os.mkdir(path)
-    os.mkdir(year_path)
-    os.mkdir(day_path)
-    file_path = day_path + '/test3000.12o_G01.txt'
-    with open(file_path, 'w') as test_file:
-        index_row = (
-            'sod\t\t'
-            'dsTEC/dt\t\t'
-            'lon\t\tlat\t\t'
-            'h_ipp\t\telev\t\tazi\n'
-        )
-        test_data_row = (
-            '8250.0\t\t'
-            '-0.01919536491673681\t\t'
-            '-165.3638966481876\t\t'
-            '24.961242295471187\t\t'
-            '349982.9213181995\t\t'
-            '10.1815617588652\t\t'
-            '302.5328897665781\n'
-        )
-        test_file.write(index_row)
-        test_file.write(test_data_row)
-    yield file_path
-
-    # deleting the test files
-    os.remove(file_path)
-    file_path = file_path.split('/')
-    # deleting the directories
-    os.rmdir('/'.join(file_path[:-1]))
-    os.rmdir('/'.join(file_path[:-2]))
-    os.rmdir('/'.join(file_path[:-3]))
-
-
 def test_transform_sod_to_timestamp(test_fixed_data) -> None:
     """
     Tests whether the sod_to_timestamp returns the expected values.
