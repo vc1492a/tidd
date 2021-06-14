@@ -197,7 +197,7 @@ This project is licensed under the
 If citing this work, use the following: 
 
 ```
-# TBD
+# We're working on it ;) 
 ```
 
 ### Motivation
