@@ -6,13 +6,13 @@
 *.pyc
 /tidd.egg-info/*
 .coverage
+.coverage.*
 /data
 data.tar.gz
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
 proposals
 documents
-tests/*/
 
 #vscode files
 .vscode/*

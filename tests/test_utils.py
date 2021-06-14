@@ -21,7 +21,7 @@ def test_fixed_data() -> pd.DataFrame:
 
     # read data
     df = Data.read_data_from_file(
-        "./data/hawaii/2012/302/ahup3020.12o_G20.txt"
+        "./tests/data/ahup3020.12o_G20.txt"
     )
 
     return df
@@ -190,4 +190,4 @@ def test_transform_generate_images(test_fixed_data) -> None:
     directories = [x[0] for x in os.walk(pth) if len(x[0].split("/")) == 3]
 
     # delete each directory
-    [shutil.rmtree(x) for x in directories]
+    [shutil.rmtree(x) for x in directories if "data" not in x]
