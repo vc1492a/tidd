@@ -162,7 +162,7 @@ class Transform:
         # establish a logger
         tqdm_out = TqdmToLogger(logger, level=logging.INFO)
 
-        logging.info(len(events))
+        #logging.info(len(events))
 
         p_idx = 0
         for period in tqdm(events, file=tqdm_out, total=len(events), mininterval=3, disable=operator.not_(verbose)):
@@ -182,7 +182,10 @@ class Transform:
             sat = combo.split("__")[1]
 
             # get the start time of the sat and the end time
-            anom_range = [labels[str(doy)][sat]["start"], labels[str(doy)][sat]["finish"]]
+            try:
+                anom_range = [labels[str(doy)][sat]["start"], labels[str(doy)][sat]["finish"]]
+            except KeyError:
+                anom_range = [0, 0]
 
             # process all the windows
             for idx in list(range(period.shape[0])):
