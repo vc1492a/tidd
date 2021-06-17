@@ -162,6 +162,9 @@ class Transform:
         # establish a logger
         tqdm_out = TqdmToLogger(logger, level=logging.INFO)
 
+        logging.info(len(events))
+
+        p_idx = 0
         for period in tqdm(events, file=tqdm_out, total=len(events), mininterval=3, disable=operator.not_(verbose)):
 
             # get the doy
@@ -202,20 +205,22 @@ class Transform:
 
                     # save to a particular path based on if we are within the anomalous range
                     if (int(subset["sod"].values[-1])) in list(range(anom_range[0], anom_range[1])):
-                        plt.savefig(output_dir + "/" + combo + "/labeled/anomalous/" + str(doy) + "_" + str(
+                        plt.savefig(output_dir + "/" + combo + "/labeled/anomalous/" + str(doy) + "_" + str(p_idx) + "_" + str(
                             idx) + "_" + str(idx + window_size) + "_GAF.jpg")
                     else:
                         plt.savefig(
-                            output_dir + "/" + combo + "/labeled/normal/" + str(doy) + "_" + str(
+                            output_dir + "/" + combo + "/labeled/normal/" + str(doy) + "_" + str(p_idx) + "_" + str(
                                 idx) + "_" + str(idx + window_size) + "_GAF.jpg")
 
                     if "validation" in output_dir + "/" + combo:
                         Path(output_dir + "/" + combo + "/unlabeled").mkdir(parents=True, exist_ok=True)
                         plt.savefig(
-                            output_dir + "/" + combo + "/unlabeled/" + str(doy) + "_" + str(
+                            output_dir + "/" + combo + "/unlabeled/" + str(doy) + "_" + str(p_idx) + "_" + str(
                                 idx) + "_" + str(idx + window_size) + "_GAF.jpg")
 
                     plt.close()
+
+            p_idx += 1
 
     @staticmethod
     def data_to_image(dataframe: Union[pd.Series, np.array]) -> np.array:
