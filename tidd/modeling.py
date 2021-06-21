@@ -13,6 +13,7 @@ from fastai.vision.all import resnet34, \
     Adam, ImageDataLoaders, Resize, aug_transforms, cnn_learner, error_rate, accuracy, \
     ShowGraphCallback, CSVLogger, ReduceLROnPlateau, EarlyStoppingCallback, SaveModelCallback, \
     ClassificationInterpretation, load_learner
+import fastai.distributed
 from hyperdash import Experiment as HyperdashExperiment
 import json
 import logging
@@ -58,7 +59,10 @@ class Model:
         # some to be filled
         self.learner = None
 
-    def fit(self, max_epochs: int, verbose: bool = False, callbacks: list = None) -> None:
+    def fit(self, max_epochs: int, 
+            parallel_training: bool = False,
+            verbose: bool = False, 
+            callbacks: list = None) -> None:
 
         """
         Trains the specified model for a specified number of maximum epochs.
@@ -95,6 +99,9 @@ class Model:
             callbacks.append(ShowGraphCallback())
 
         # train the model
+        # TODO: try and contain the parallel functionality in this seciton of the
+        # code
+        # with self.learner.parallel_ctx
         self.learner.fit(
             max_epochs,
             lr=self.learning_rate,
@@ -174,7 +181,7 @@ class Experiment:
     def __init__(self,
                  model: Model,
                  name: str = "tidd",
-                 cuda_device: int = 0,
+                 cuda_device: Union[int, List[int]] = 0,
                  training_data_paths: List[Union[str, Path]] = ["./"],
                  validation_data_paths: List[Union[str, Path]] = None,
                  generate_data: bool = False,
@@ -264,12 +271,17 @@ class Experiment:
 
         try:
             assert torch.cuda.is_available()
+            torch.cuda.set_device('cuda:' + str(self.cuda_device[0]))
+            self.exp.param("device_name", torch.cuda.get_device_name(self.cuda_device))
+        except TypeError:
+            assert torch.cuda.is_available()
             torch.cuda.set_device('cuda:' + str(self.cuda_device))
             self.exp.param("device_name", torch.cuda.get_device_name(self.cuda_device))
         except AssertionError:
             logging.warning("Specified CUDA device not available. No device_name experiment parameter sent.")
 
-        # TODO:
+        # TODO: Remove below
+        # edit the following 
         if self.parallel_gpus is True:
 
             if torch.cuda.device_count() > 1:
