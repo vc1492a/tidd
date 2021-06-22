@@ -14,6 +14,7 @@ from fastai.vision.all import resnet34, \
     ShowGraphCallback, CSVLogger, ReduceLROnPlateau, EarlyStoppingCallback, SaveModelCallback, \
     ClassificationInterpretation, load_learner
 import fastai.distributed
+from fastcore.parallel import parallel
 from hyperdash import Experiment as HyperdashExperiment
 import json
 import logging
@@ -61,6 +62,7 @@ class Model:
 
     def fit(self, max_epochs: int, 
             parallel_training: bool = False,
+            parallel_gpus: List[int] = [],
             verbose: bool = False, 
             callbacks: list = None) -> None:
 
@@ -99,14 +101,20 @@ class Model:
             callbacks.append(ShowGraphCallback())
 
         # train the model
-        # TODO: try and contain the parallel functionality in this seciton of the
-        # code
-        # with self.learner.parallel_ctx
-        self.learner.fit(
-            max_epochs,
-            lr=self.learning_rate,
-            cbs=callbacks
-        )
+
+        if parallel_training: 
+            with self.learner.parallel_ctx(parallel_gpus):
+                self.learner.fit(
+                    max_epochs,
+                    lr=self.learning_rate,
+                    cbs=callbacks
+                )
+        else:
+            self.learner.fit(
+                max_epochs,
+                lr=self.learning_rate,
+                cbs=callbacks
+            )
 
     def export(self, export_path: Union[str, Path]) -> None:
         """
@@ -280,18 +288,21 @@ class Experiment:
         except AssertionError:
             logging.warning("Specified CUDA device not available. No device_name experiment parameter sent.")
 
-        # TODO: Remove below
-        # edit the following 
+        # TODO: Checking for valid device selection
         if self.parallel_gpus is True:
-
-            if torch.cuda.device_count() > 1:
-                # TODO: the below may need to be the fastai object
-                self.model.learner = torch.nn.DataParallel(self.model.learner)
-
-            else:
+            try:
+                if torch.cuda.device_count() > 1:
+                    if len(self.cuda_device) > torch.cuda.device_count():
+                        logging.warning(UserWarning, "Not enough CUDA devices, setting to 1 device")
+                        self.exp.param("parallel_gpus", False)
+                        self.parallel_gpus = False
+                else:
+                    raise TypeError()
+            except TypeError:
                 # emit a UserWarning
                 logging.warning(UserWarning, "Only 1 CUDA device available.")
                 self.exp.param("parallel_gpus", False)
+                self.parallel_gpus = False
 
         self.exp.param("parallel_gpus", self.parallel_gpus)
 
@@ -570,7 +581,10 @@ class Experiment:
         """
 
         # train the model
-        self.model.fit(max_epochs=self.max_epochs, verbose=verbose)
+        self.model.fit(max_epochs=self.max_epochs, 
+                parallel_training=self.parallel_gpus, 
+                parallel_gpus=self.cuda_device,
+                verbose=verbose)
 
         # interpret the results
         interp = ClassificationInterpretation.from_learner(self.model.learner)
