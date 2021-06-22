@@ -457,7 +457,7 @@ class Experiment:
                         # note: currently assumes one ground truth sequence in period
                         ground_truth_sequence = event[
                             (event["sod"] >= labels[location][doy_for_location][sat]["start"]) &
-                            (event["sod"] >= labels[location][doy_for_location][sat]["finish"])
+                            (event["sod"] <= labels[location][doy_for_location][sat]["finish"])
                         ].index.values
 
                         # adjust the sequence for the window size used to generate the images
@@ -494,10 +494,6 @@ class Experiment:
                             adjusted_ground_truth_sequence, # note: currently assumes one ground truth sequence in period
                             anom_sequences
                         )
-
-                        logging.info(len(adjusted_ground_truth_sequence))
-                        logging.info(len(classification_bool))
-                        logging.info(event.shape)
 
                         self.tp += tp
                         self.fn += fn
