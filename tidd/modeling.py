@@ -393,8 +393,11 @@ class Experiment:
             with open(labels_path, "rb") as f_in:
                 labels = json.load(f_in)
                 locations = list(labels.keys())
+
+                
             tqdm_out = TqdmToLogger(logger, level=logging.INFO)
             
+
             # TODO (future work): parallel process the below
             # process each of the directories in the validation set
             for d in tqdm(image_directories, file=tqdm_out, total=len(image_directories), mininterval=10, disable=operator.not_(verbose)):
