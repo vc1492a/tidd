@@ -47,13 +47,15 @@ class Model:
                  architecture: fastai = resnet34,
                  batch_size: int = 256,
                  learning_rate: float = 0.0001,
-                 optimization_function: fastai = Adam
+                 optimization_function: fastai = Adam,
+                 callbacks: list = None
                  ):
 
         self.architecture = architecture
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.optimization_function = optimization_function
+        self.callbacks = callbacks
 
         # some to be filled
         self.learner = None
@@ -69,36 +71,34 @@ class Model:
         :param max_epochs: The maximum number of epochs to train the model (default 50).
         :param verbose: If true, graphs the model during training and plots the results
         of the training process.
-        :param callbacks: A list of callbacks to be used during model training. By default, includes
-        CSVLogger, ReduceLROnPlateau, EarlyStoppingCallback, and SaveModelCallback.
         :return: None
         """
 
         # define callbacks to use during model training
-        if callbacks is None:
+        if self.callbacks is None:
             callbacks = [
                 CSVLogger(),  # TODO: does this need a path?
                 ReduceLROnPlateau(
                     monitor='valid_loss',
-                    min_delta=0.1,
-                    patience=2
+                    min_delta=0.01,
+                    patience=3
                 ),
                 EarlyStoppingCallback(
                     monitor="valid_loss",
-                    patience=3,
+                    patience=5,
                     min_delta=0.00001
                 ),
                 SaveModelCallback()
             ]
 
         if verbose is True:
-            callbacks.append(ShowGraphCallback())
+            self.callbacks.append(ShowGraphCallback())
 
         # train the model
         self.learner.fit(
             max_epochs,
             lr=self.learning_rate,
-            cbs=callbacks
+            cbs=self.callbacks
         )
 
     def export(self, export_path: Union[str, Path]) -> None:
@@ -555,9 +555,9 @@ class Experiment:
             fp_sequence_length = self.exp.metric("fp_sequence_length", fp_sequence_length)
 
             # if verbose, plot the distribution of the sequence lengths
-            if verbose is True:
-                ax = plot_distribution(self.tp_lengths, self.fp_lengths)
-                ax.savefig(save_path + "/classification_sequence_length_distribution.jpg")
+            #if verbose is True:
+            #    ax = plot_distribution(self.tp_lengths, self.fp_lengths)
+            #    ax.savefig(save_path + "/classification_sequence_length_distribution.jpg")
 
             logging.info("Out of sample validation complete.")
 
