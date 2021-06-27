@@ -13,6 +13,8 @@ from fastai.vision.all import resnet34, \
     Adam, ImageDataLoaders, Resize, aug_transforms, cnn_learner, error_rate, accuracy, \
     ShowGraphCallback, CSVLogger, ReduceLROnPlateau, EarlyStoppingCallback, SaveModelCallback, \
     ClassificationInterpretation, load_learner
+import fastai.distributed
+from fastcore.parallel import parallel
 from hyperdash import Experiment as HyperdashExperiment
 import json
 import logging
@@ -60,7 +62,11 @@ class Model:
         # some to be filled
         self.learner = None
 
-    def fit(self, max_epochs: int, verbose: bool = False, callbacks: list = None) -> None:
+    def fit(self, max_epochs: int, 
+            parallel_training: bool = False,
+            parallel_gpus: List[int] = [],
+            verbose: bool = False, 
+            callbacks: list = None) -> None:
 
         """
         Trains the specified model for a specified number of maximum epochs.
@@ -95,11 +101,20 @@ class Model:
             self.callbacks.append(ShowGraphCallback())
 
         # train the model
-        self.learner.fit(
-            max_epochs,
-            lr=self.learning_rate,
-            cbs=self.callbacks
-        )
+
+        if parallel_training: 
+            with self.learner.parallel_ctx(parallel_gpus):
+                self.learner.fit(
+                    max_epochs,
+                    lr=self.learning_rate,
+                    cbs=callbacks
+                )
+        else:
+            self.learner.fit(
+                max_epochs,
+                lr=self.learning_rate,
+                cbs=callbacks
+            )
 
     def export(self, export_path: Union[str, Path]) -> None:
         """
@@ -174,7 +189,7 @@ class Experiment:
     def __init__(self,
                  model: Model,
                  name: str = "tidd",
-                 cuda_device: int = 0,
+                 cuda_device: Union[int, List[int]] = 0,
                  training_data_paths: List[Union[str, Path]] = ["./"],
                  validation_data_paths: List[Union[str, Path]] = None,
                  generate_data: bool = False,
@@ -264,22 +279,30 @@ class Experiment:
 
         try:
             assert torch.cuda.is_available()
+            torch.cuda.set_device('cuda:' + str(self.cuda_device[0]))
+            self.exp.param("device_name", torch.cuda.get_device_name(self.cuda_device))
+        except TypeError:
+            assert torch.cuda.is_available()
             torch.cuda.set_device('cuda:' + str(self.cuda_device))
             self.exp.param("device_name", torch.cuda.get_device_name(self.cuda_device))
         except AssertionError:
             logging.warning("Specified CUDA device not available. No device_name experiment parameter sent.")
 
-        # TODO:
+        # TODO: Checking for valid device selection
         if self.parallel_gpus is True:
-
-            if torch.cuda.device_count() > 1:
-                # TODO: the below may need to be the fastai object
-                self.model.learner = torch.nn.DataParallel(self.model.learner)
-
-            else:
+            try:
+                if torch.cuda.device_count() > 1:
+                    if len(self.cuda_device) > torch.cuda.device_count():
+                        logging.warning(UserWarning, "Not enough CUDA devices, setting to 1 device")
+                        self.exp.param("parallel_gpus", False)
+                        self.parallel_gpus = False
+                else:
+                    raise TypeError()
+            except TypeError:
                 # emit a UserWarning
                 logging.warning(UserWarning, "Only 1 CUDA device available.")
                 self.exp.param("parallel_gpus", False)
+                self.parallel_gpus = False
 
         self.exp.param("parallel_gpus", self.parallel_gpus)
 
@@ -370,8 +393,11 @@ class Experiment:
             with open(labels_path, "rb") as f_in:
                 labels = json.load(f_in)
                 locations = list(labels.keys())
+
+                
             tqdm_out = TqdmToLogger(logger, level=logging.INFO)
             
+
             # TODO (future work): parallel process the below
             # process each of the directories in the validation set
             for d in tqdm(image_directories, file=tqdm_out, total=len(image_directories), mininterval=10, disable=operator.not_(verbose)):
@@ -572,7 +598,10 @@ class Experiment:
         """
 
         # train the model
-        self.model.fit(max_epochs=self.max_epochs, verbose=verbose)
+        self.model.fit(max_epochs=self.max_epochs, 
+                parallel_training=self.parallel_gpus, 
+                parallel_gpus=self.cuda_device,
+                verbose=verbose)
 
         # interpret the results
         interp = ClassificationInterpretation.from_learner(self.model.learner)
