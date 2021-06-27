@@ -101,7 +101,6 @@ class Model:
             self.callbacks.append(ShowGraphCallback())
 
         # train the model
-<<<<<<< HEAD
 
         if parallel_training: 
             with self.learner.parallel_ctx(parallel_gpus):
@@ -116,13 +115,6 @@ class Model:
                 lr=self.learning_rate,
                 cbs=callbacks
             )
-=======
-        self.learner.fit(
-            max_epochs,
-            lr=self.learning_rate,
-            cbs=self.callbacks
-        )
->>>>>>> dev
 
     def export(self, export_path: Union[str, Path]) -> None:
         """
