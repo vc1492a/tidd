@@ -2,7 +2,12 @@
 All notable changes to the software will be documented in this Changelog.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) 
-and adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). 
+and adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+
+## 0.1.1
+### Changed
+- Added support for parallel GPU training using `fastai.distributed`
+- 
 
 ## 0.1.0
 ### Changed
@@ -15,7 +20,7 @@ the `tidd` core.
 ## 0.0.3
 ### Changed
 - Renamed `data.normalize` to `data.rescale` to better reflect the 
-purpose and functionality of the function. s
+purpose and functionality of the function. 
 - Adds a notebook for Exploratory Data Analysis called 
 `notebooks/Exploratory Data Analysis of 2012 Hawaii Dataset.ipynb` and 
 removes other not needed notebooks. 

@@ -13,10 +13,10 @@ M = Model(
 
 # specify source of data (in this case raw data to be converted to images)
 training_data_paths = [
-    "../data/hawaii"
+    "../data/hawaii_test"
 ]
 validation_data_paths = [
-    "../data/chile"
+    "../data/chile_test"
 ]
 
 # define an experiment

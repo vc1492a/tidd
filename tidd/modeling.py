@@ -13,6 +13,8 @@ from fastai.vision.all import resnet34, \
     Adam, ImageDataLoaders, Resize, aug_transforms, cnn_learner, error_rate, accuracy, \
     ShowGraphCallback, CSVLogger, ReduceLROnPlateau, EarlyStoppingCallback, SaveModelCallback, \
     ClassificationInterpretation, load_learner
+import fastai.distributed
+from fastcore.parallel import parallel
 from hyperdash import Experiment as HyperdashExperiment
 import json
 import logging
@@ -47,18 +49,24 @@ class Model:
                  architecture: fastai = resnet34,
                  batch_size: int = 256,
                  learning_rate: float = 0.0001,
-                 optimization_function: fastai = Adam
+                 optimization_function: fastai = Adam,
+                 callbacks: list = None
                  ):
 
         self.architecture = architecture
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.optimization_function = optimization_function
+        self.callbacks = callbacks
 
         # some to be filled
         self.learner = None
 
-    def fit(self, max_epochs: int, verbose: bool = False, callbacks: list = None) -> None:
+    def fit(self, max_epochs: int, 
+            parallel_training: bool = False,
+            parallel_gpus: List[int] = [],
+            verbose: bool = False, 
+            callbacks: list = None) -> None:
 
         """
         Trains the specified model for a specified number of maximum epochs.
@@ -69,37 +77,44 @@ class Model:
         :param max_epochs: The maximum number of epochs to train the model (default 50).
         :param verbose: If true, graphs the model during training and plots the results
         of the training process.
-        :param callbacks: A list of callbacks to be used during model training. By default, includes
-        CSVLogger, ReduceLROnPlateau, EarlyStoppingCallback, and SaveModelCallback.
         :return: None
         """
 
         # define callbacks to use during model training
-        if callbacks is None:
+        if self.callbacks is None:
             callbacks = [
                 CSVLogger(),  # TODO: does this need a path?
                 ReduceLROnPlateau(
                     monitor='valid_loss',
-                    min_delta=0.1,
-                    patience=2
+                    min_delta=0.01,
+                    patience=3
                 ),
                 EarlyStoppingCallback(
                     monitor="valid_loss",
-                    patience=3,
+                    patience=5,
                     min_delta=0.00001
                 ),
                 SaveModelCallback()
             ]
 
         if verbose is True:
-            callbacks.append(ShowGraphCallback())
+            self.callbacks.append(ShowGraphCallback())
 
         # train the model
-        self.learner.fit(
-            max_epochs,
-            lr=self.learning_rate,
-            cbs=callbacks
-        )
+
+        if parallel_training: 
+            with self.learner.parallel_ctx(parallel_gpus):
+                self.learner.fit(
+                    max_epochs,
+                    lr=self.learning_rate,
+                    cbs=callbacks
+                )
+        else:
+            self.learner.fit(
+                max_epochs,
+                lr=self.learning_rate,
+                cbs=callbacks
+            )
 
     def export(self, export_path: Union[str, Path]) -> None:
         """
@@ -174,7 +189,7 @@ class Experiment:
     def __init__(self,
                  model: Model,
                  name: str = "tidd",
-                 cuda_device: int = 0,
+                 cuda_device: Union[int, List[int]] = 0,
                  training_data_paths: List[Union[str, Path]] = ["./"],
                  validation_data_paths: List[Union[str, Path]] = None,
                  generate_data: bool = False,
@@ -264,22 +279,30 @@ class Experiment:
 
         try:
             assert torch.cuda.is_available()
+            torch.cuda.set_device('cuda:' + str(self.cuda_device[0]))
+            self.exp.param("device_name", torch.cuda.get_device_name(self.cuda_device))
+        except TypeError:
+            assert torch.cuda.is_available()
             torch.cuda.set_device('cuda:' + str(self.cuda_device))
             self.exp.param("device_name", torch.cuda.get_device_name(self.cuda_device))
         except AssertionError:
             logging.warning("Specified CUDA device not available. No device_name experiment parameter sent.")
 
-        # TODO:
+        # TODO: Checking for valid device selection
         if self.parallel_gpus is True:
-
-            if torch.cuda.device_count() > 1:
-                # TODO: the below may need to be the fastai object
-                self.model.learner = torch.nn.DataParallel(self.model.learner)
-
-            else:
+            try:
+                if torch.cuda.device_count() > 1:
+                    if len(self.cuda_device) > torch.cuda.device_count():
+                        logging.warning(UserWarning, "Not enough CUDA devices, setting to 1 device")
+                        self.exp.param("parallel_gpus", False)
+                        self.parallel_gpus = False
+                else:
+                    raise TypeError()
+            except TypeError:
                 # emit a UserWarning
                 logging.warning(UserWarning, "Only 1 CUDA device available.")
                 self.exp.param("parallel_gpus", False)
+                self.parallel_gpus = False
 
         self.exp.param("parallel_gpus", self.parallel_gpus)
 
@@ -370,8 +393,11 @@ class Experiment:
             with open(labels_path, "rb") as f_in:
                 labels = json.load(f_in)
                 locations = list(labels.keys())
+
+                
             tqdm_out = TqdmToLogger(logger, level=logging.INFO)
             
+
             # TODO (future work): parallel process the below
             # process each of the directories in the validation set
             for d in tqdm(image_directories, file=tqdm_out, total=len(image_directories), mininterval=10, disable=operator.not_(verbose)):
@@ -398,30 +424,6 @@ class Experiment:
                     # assign the doy for the location
                     # note: assumes one doy for the location
                     doy_for_location = list(labels[location].keys())[0]
-
-                    # filter for images that match the day of year
-                    image_files_with_labels = list()
-                    for i in image_files:
-                        doy = i.split("/")[-1].split("_")[0]
-                        if doy in labels[location].keys():
-                            image_files_with_labels.append(i)
-
-                    # for the sorted images in the directory, predict the sequence
-                    try:
-                        classification, classification_confidence, classification_bool = self.model.predict_sequences(
-                            image_files_with_labels)
-                    except Exception as ex:
-                        logging.warning(RuntimeWarning, "Error encountered when predicting sequence. Not included in "
-                                                        "validation result.")
-                        logging.warning(str(ex))
-                        if ex is KeyboardInterrupt:
-                            break
-                        continue
-
-                    # get the indices of the anomalous values
-                    anom_idx = np.where(np.array(classification_bool) == 1)
-                    # get the sequences of the anomalous values
-                    anom_sequences = Transform.group_consecutive_values(list(anom_idx[0]))
 
                     # we need to load in the original data file (float data) that contains the second of day
                     # using the doy and sat of first image load in the data file
@@ -464,51 +466,89 @@ class Experiment:
                         min_sequence_length=100
                     )
 
-                    # get the ground truth for the out of sample assessment
-                    # note: currently assumes one ground truth sequence in period
-                    event = events[0].reset_index()
-                    ground_truth_sequence = event[
-                        (event["sod"] >= labels[location][doy_for_location][sat]["start"]) &
-                        (event["sod"] >= labels[location][doy_for_location][sat]["finish"])
-                    ].index.values
+                    # identify the appropriate event
+                    event = None
+                    event_idx = 0
+                    for e in events:
+                        begin_sod = e["sod"].values[0]
+                        end_sod = e["sod"].values[-1]
+                        if begin_sod <= labels[location][doy_for_location][sat]["start"] <= end_sod and begin_sod <= labels[location][doy_for_location][sat]["finish"] <= end_sod:
+                            event = e
+                            break
+                        event_idx += 1
 
-                    # adjust the sequence for the window size used to generate the images
-                    adjusted_ground_truth_sequence = [x - self.window_size for x in ground_truth_sequence]
+                    if event is not None:
 
-                    # Obtain the true positives, false negatives, and false positives
-                    tp, fn, fp, tp_lengths, fp_lengths = confusion_matrix_classification(
-                        adjusted_ground_truth_sequence, # note: currently assumes one ground truth sequence in period
-                        anom_sequences
-                    )
+                        # get the ground truth for the out of sample assessment
+                        # note: currently assumes one ground truth sequence in period
+                        ground_truth_sequence = event[
+                            (event["sod"] >= labels[location][doy_for_location][sat]["start"]) &
+                            (event["sod"] <= labels[location][doy_for_location][sat]["finish"])
+                        ].index.values
 
-                    self.tp += tp
-                    self.fn += fn
-                    self.fp += fp
-                    [self.tp_lengths.append(tpl) for tpl in tp_lengths]
-                    [self.fp_lengths.append(fpl) for fpl in fp_lengths]
+                        # adjust the sequence for the window size used to generate the images
+                        adjusted_ground_truth_sequence = [x - self.window_size for x in ground_truth_sequence]
 
-                    # if verbose, save plots from validation
-                    if verbose:
+                        # filter for images that match the day of year and event
+                        image_files_with_labels = list()
+                        for i in image_files:
+                            doy = i.split("/")[-1].split("_")[0]
+                            period_idx = i.split("/")[-1].split("_")[1]
+                            if doy in labels[location].keys() and period_idx == str(event_idx):
+                                image_files_with_labels.append(i)
 
-                        fig = plot_classification(
-                            event,
-                            pass_id,
-                            labels[location][str(doy_for_location)][sat],
-                            classification_bool,
-                            classification_confidence,
-                            window_size_adjustment=self.window_size
-                        )
-                        fig.savefig(save_path + '/' + pass_id + '_classification_plot.png')
-                        plt.close(fig)
-
-                    if self.save_path is not None:
+                        # for the sorted images in the directory, predict the sequence
                         try:
-                            save_df = event.iloc[59:].copy()
-                            save_df['anomaly'] = classification_bool
-                            save_df['confidence'] = classification_confidence
-                            save_df.to_csv(save_path + "/" + pass_id + '_results.csv')
-                        except FileNotFoundError:
-                            logging.info('Save Path "' + save_path + "/" + pass_id + '_results.csv' + '" not valid')
+                            classification, classification_confidence, classification_bool = self.model.predict_sequences(
+                                image_files_with_labels)
+                        except Exception as ex:
+                            logging.warning(RuntimeWarning,
+                                            "Error encountered when predicting sequence. Not included in "
+                                            "validation result.")
+                            logging.warning(str(ex))
+                            if ex is KeyboardInterrupt:
+                                break
+                            continue
+
+                        # get the indices of the anomalous values
+                        anom_idx = np.where(np.array(classification_bool) == 1)
+                        # get the sequences of the anomalous values
+                        anom_sequences = Transform.group_consecutive_values(list(anom_idx[0]))
+
+                        # Obtain the true positives, false negatives, and false positives
+                        tp, fn, fp, tp_lengths, fp_lengths = confusion_matrix_classification(
+                            adjusted_ground_truth_sequence, # note: currently assumes one ground truth sequence in period
+                            anom_sequences
+                        )
+
+                        self.tp += tp
+                        self.fn += fn
+                        self.fp += fp
+                        [self.tp_lengths.append(tpl) for tpl in tp_lengths]
+                        [self.fp_lengths.append(fpl) for fpl in fp_lengths]
+
+                        # if verbose, save plots from validation
+                        if verbose:
+
+                            fig = plot_classification(
+                                event,
+                                pass_id,
+                                labels[location][str(doy_for_location)][sat],
+                                classification_bool,
+                                classification_confidence,
+                                window_size_adjustment=self.window_size
+                            )
+                            fig.savefig(save_path + '/' + pass_id + '_classification_plot.png')
+                            plt.close(fig)
+
+                        if self.save_path is not None:
+                            try:
+                                save_df = event.iloc[59:].copy()
+                                save_df['anomaly'] = classification_bool
+                                save_df['confidence'] = classification_confidence
+                                save_df.to_csv(save_path + "/" + pass_id + '_results.csv')
+                            except FileNotFoundError:
+                                logging.info('Save Path "' + save_path + "/" + pass_id + '_results.csv' + '" not valid')
 
                 except Exception as ex:
                     if ex is KeyboardInterrupt:
@@ -541,9 +581,9 @@ class Experiment:
             fp_sequence_length = self.exp.metric("fp_sequence_length", fp_sequence_length)
 
             # if verbose, plot the distribution of the sequence lengths
-            if verbose is True:
-                ax = plot_distribution(self.tp_lengths, self.fp_lengths)
-                ax.savefig(save_path + "/classification_sequence_length_distribution.jpg")
+            #if verbose is True:
+            #    ax = plot_distribution(self.tp_lengths, self.fp_lengths)
+            #    ax.savefig(save_path + "/classification_sequence_length_distribution.jpg")
 
             logging.info("Out of sample validation complete.")
 
@@ -558,7 +598,10 @@ class Experiment:
         """
 
         # train the model
-        self.model.fit(max_epochs=self.max_epochs, verbose=verbose)
+        self.model.fit(max_epochs=self.max_epochs, 
+                parallel_training=self.parallel_gpus, 
+                parallel_gpus=self.cuda_device,
+                verbose=verbose)
 
         # interpret the results
         interp = ClassificationInterpretation.from_learner(self.model.learner)
