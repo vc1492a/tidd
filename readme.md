@@ -139,9 +139,9 @@ Day of year 259 is available which is the day of the earthquake.
 
 | Metric | Testing Score | Validation Score | 
 | ------- | ------- | ------- | 
-| recall | 97.9% | 100% | 
-| precision | 95.9% | 85.7 % | 
-|F1 Score | 96.9% | 92.3% | 
+| recall | 84.6% | 100% | 
+| precision | 100% | 85.7 % | 
+| F1 Score | 91.7%% | 92.3% | 
 
 ## Contributing
 
