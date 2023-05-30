@@ -125,14 +125,6 @@ the sTEC estimations
 don’t consider data with elevation under 20 degrees since they are too 
 noisy)
 
-#### Hawaii
- 
-The day of the earthquake is 302. Data is available for days of year 290 through 304. 
-
-#### Chile 
-
-Day of year 259 is available which is the day of the earthquake.
-
 ## Performance Statistics
 
 | Metric | Validation Score | 
