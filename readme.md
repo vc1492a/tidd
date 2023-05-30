@@ -7,8 +7,6 @@ NASA Jet Propulsion Laboratory (JPL), Sapienza University of Rome and the Univer
 [![Version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/archive/0.1.1.tar.gz)
 [![Language](https://img.shields.io/badge/python-3.7,%203.8-blue)](#)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Build Status](https://travis-ci.org/vc1492a/tidd.svg?branch=main)](https://travis-ci.com/vc1492a/tidd)
-[![Coverage Status](https://coveralls.io/repos/github/vc1492a/tidd/badge.svg?branch=main)](https://coveralls.io/github/vc1492a/tidd?branch=main)
 
 ## About 
 
@@ -137,11 +135,11 @@ Day of year 259 is available which is the day of the earthquake.
 
 ## Performance Statistics
 
-| Metric | Testing Score | Validation Score | 
-| ------- | ------- | ------- | 
-| recall | 84.6% | 100% | 
-| precision | 100% | 85.7 % | 
-| F1 Score | 91.7%% | 92.3% | 
+| Metric | Validation Score | 
+| ------- | ----- |
+| recall | 84.6% |
+| precision | 100% |
+| F1 Score | 91.7% |
 
 ## Contributing
 
@@ -199,7 +197,19 @@ This project is licensed under the
 If citing this work, use the following: 
 
 ```
-# We're working on it ;) 
+@article{Constantinou2023,
+  doi = {TBD},
+  url = {TBD},
+  year  = {2023},
+  month = {july},
+  publisher = {Institute of Electrical and Electronics Engineers (IEEE)},
+  volume = {TBD},
+  number = {TBD},
+  pages = {TBD},
+  author = {Valentino Constantinou, Michela Ravanelli, Hamlin Liu, Jacob Bortnik},
+  title = {A Deep Learning Approach for Detection of Internal Gravity Waves in Earth's Ionosphere},
+  journal = {International Geoscience and Remote Sensing Symposium (IGARSS)}
+}
 ```
 
 ### Motivation
