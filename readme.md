@@ -189,18 +189,13 @@ This project is licensed under the
 If citing this work, use the following: 
 
 ```
-@article{Constantinou2023,
-  doi = {TBD},
-  url = {TBD},
-  year  = {2023},
-  month = {july},
-  publisher = {Institute of Electrical and Electronics Engineers (IEEE)},
-  volume = {TBD},
-  number = {TBD},
-  pages = {TBD},
-  author = {Valentino Constantinou, Michela Ravanelli, Hamlin Liu, Jacob Bortnik},
-  title = {A Deep Learning Approach for Detection of Internal Gravity Waves in Earth's Ionosphere},
-  journal = {International Geoscience and Remote Sensing Symposium (IGARSS)}
+@misc{constantinou2023deep,
+  title={Deep Learning Driven Detection of Tsunami Related Internal GravityWaves: a path towards open-ocean natural hazards detection}, 
+  author={Valentino Constantinou and Michela Ravanelli and Hamlin Liu and Jacob Bortnik},
+  year={2023},
+  eprint={2308.04611},
+  archivePrefix={arXiv},
+  primaryClass={cs.LG}
 }
 ```
 
