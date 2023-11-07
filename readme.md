@@ -189,13 +189,15 @@ This project is licensed under the
 If citing this work, use the following: 
 
 ```
-@misc{constantinou2023deep,
-  title={Deep Learning Driven Detection of Tsunami Related Internal GravityWaves: a path towards open-ocean natural hazards detection}, 
-  author={Valentino Constantinou and Michela Ravanelli and Hamlin Liu and Jacob Bortnik},
-  year={2023},
-  eprint={2308.04611},
-  archivePrefix={arXiv},
-  primaryClass={cs.LG}
+@inproceedings{Constantinou2023,
+  doi = {10.1109/igarss52108.2023.10282501},
+  url = {https://doi.org/10.1109/igarss52108.2023.10282501},
+  year = {2023},
+  month = jul,
+  publisher = {{IEEE}},
+  author = {Valentino Constantinou and Michela Ravanelli and Hamlin Liu and Jacob Bortnik},
+  title = {A Deep Learning Approach for Detection of Internal Gravity Waves in Earth's Ionosphere},
+  booktitle = {{IGARSS} 2023 - 2023 {IEEE} International Geoscience and Remote Sensing Symposium}
 }
 ```
 
