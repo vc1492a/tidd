@@ -7,6 +7,7 @@ NASA Jet Propulsion Laboratory (JPL), Sapienza University of Rome and the Univer
 [![Version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/archive/0.1.1.tar.gz)
 [![Language](https://img.shields.io/badge/python-3.7,%203.8-blue)](#)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![DOI](https://zenodo.org/badge/241190815.svg)](https://zenodo.org/doi/10.5281/zenodo.12571499)
 
 ## About 
 
