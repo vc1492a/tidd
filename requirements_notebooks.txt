@@ -1,4 +1,4 @@
-git+https://github.com/matplotlib/basemap.git
+basemap
 jupyter
 matplotlib
 numpy
@@ -9,3 +9,4 @@ probscale
 pyproj
 seaborn
 tqdm
+

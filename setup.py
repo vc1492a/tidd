@@ -1,8 +1,8 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='tidd',
-    packages=[''],
+    packages=find_packages(),
     version='0.1.1',
     description='',
     author='Valentino Constantinou, Hamlin Liu',
