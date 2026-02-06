@@ -15,7 +15,7 @@ from fastai.vision.all import resnet34, \
     ClassificationInterpretation, load_learner
 import fastai.distributed
 from fastcore.parallel import parallel
-from hyperdash import Experiment as HyperdashExperiment
+# from hyperdash import Experiment as HyperdashExperiment
 import json
 import logging
 import matplotlib.pyplot as plt
@@ -204,7 +204,7 @@ class Experiment:
         self.name = name
         self.model = model
         self.generate_data = generate_data
-        self.exp = HyperdashExperiment(name)
+        # self.exp = HyperdashExperiment(name)
         self.cuda_device = cuda_device
         self.training_data_path = training_data_paths
         self.validation_data_path = validation_data_paths
@@ -280,11 +280,11 @@ class Experiment:
         try:
             assert torch.cuda.is_available()
             torch.cuda.set_device('cuda:' + str(self.cuda_device[0]))
-            self.exp.param("device_name", torch.cuda.get_device_name(self.cuda_device))
+            # self.exp.param("device_name", torch.cuda.get_device_name(self.cuda_device))
         except TypeError:
             assert torch.cuda.is_available()
             torch.cuda.set_device('cuda:' + str(self.cuda_device))
-            self.exp.param("device_name", torch.cuda.get_device_name(self.cuda_device))
+            # self.exp.param("device_name", torch.cuda.get_device_name(self.cuda_device))
         except AssertionError:
             logging.warning("Specified CUDA device not available. No device_name experiment parameter sent.")
 
@@ -294,17 +294,17 @@ class Experiment:
                 if torch.cuda.device_count() > 1:
                     if len(self.cuda_device) > torch.cuda.device_count():
                         logging.warning(UserWarning, "Not enough CUDA devices, setting to 1 device")
-                        self.exp.param("parallel_gpus", False)
+                        # self.exp.param("parallel_gpus", False)
                         self.parallel_gpus = False
                 else:
                     raise TypeError()
             except TypeError:
                 # emit a UserWarning
                 logging.warning(UserWarning, "Only 1 CUDA device available.")
-                self.exp.param("parallel_gpus", False)
+                # self.exp.param("parallel_gpus", False)
                 self.parallel_gpus = False
 
-        self.exp.param("parallel_gpus", self.parallel_gpus)
+        # self.exp.param("parallel_gpus", self.parallel_gpus)
 
     def _set_data(self, verbose: bool = False) -> None:
         """
@@ -324,7 +324,7 @@ class Experiment:
         )
 
         # set the data attributes in the Hyperdash experiment
-        self.exp.param("data_path_train", self.training_data_path)
+        # self.exp.param("data_path_train", self.training_data_path)
 
         if verbose is True:
             self.dls.show_batch()
@@ -350,10 +350,10 @@ class Experiment:
         )
 
         # add the model parameters to the Hyperdash experiment
-        self.exp.param("batch_size", self.model.batch_size)
-        self.exp.param("architecture", self.model.architecture)
-        self.exp.param("learning_rate", self.model.learning_rate)
-        self.exp.param("epochs_max", self.max_epochs)
+        # self.exp.param("batch_size", self.model.batch_size)
+        # self.exp.param("architecture", self.model.architecture)
+        # self.exp.param("learning_rate", self.model.learning_rate)
+        # self.exp.param("epochs_max", self.max_epochs)
 
     def _out_of_sample(self, verbose: bool = False) -> None:
 
@@ -566,19 +566,19 @@ class Experiment:
 
             # record in Hyperdash
             self.metrics["validation_precision"] = precision
-            precision = self.exp.metric("validation_precision", precision)
-            recall = self.exp.metric("validation_recall", recall)
+            # precision = self.exp.metric("validation_precision", precision)
+            # recall = self.exp.metric("validation_recall", recall)
             self.metrics["validation_recall"] = precision
-            f_score = self.exp.metric("validation_f1_score", f_score)
+            # f_score = self.exp.metric("validation_f1_score", f_score)
             self.metrics["validation_f1_score"] = precision
 
             # get the mean sequence lengths and record in Hyperdash
             tp_sequence_length = np.mean(self.tp_lengths)
             self.metrics["tp_sequence_length"] = tp_sequence_length
-            tp_sequence_length = self.exp.metric("tp_sequence_length", tp_sequence_length)
+            # tp_sequence_length = self.exp.metric("tp_sequence_length", tp_sequence_length)
             fp_sequence_length = np.mean(self.fp_lengths)
             self.metrics["fp_sequence_length"] = fp_sequence_length
-            fp_sequence_length = self.exp.metric("fp_sequence_length", fp_sequence_length)
+            # fp_sequence_length = self.exp.metric("fp_sequence_length", fp_sequence_length)
 
             # if verbose, plot the distribution of the sequence lengths
             #if verbose is True:
@@ -611,21 +611,21 @@ class Experiment:
         results = confusion_matrix_scores(cm)
 
         # track results in the Hyperdash experiment
-        self.exp.metric("training_accuracy", results[0])
+        # self.exp.metric("training_accuracy", results[0])
         self.metrics["training_accuracy"] = results[0]
-        self.exp.metric("training_precision", results[1])
+        # self.exp.metric("training_precision", results[1])
         self.metrics["training_precision"] = results[1]
-        self.exp.metric("recall", results[2])
+        # self.exp.metric("recall", results[2])
         self.metrics["training_recall"] = results[2]
-        self.exp.metric("f1_score", results[3])
+        # self.exp.metric("f1_score", results[3])
         self.metrics["training_f1_score"] = results[3]
 
         # calculate the coverage
         predictions, targets = self.model.learner.get_preds()  # by default uses validation set
         anom_cov, normal_cov = calculating_coverage(predictions, targets)
-        self.exp.metric("anomaly coverage", anom_cov)
+        # self.exp.metric("anomaly coverage", anom_cov)
         self.metrics["training_anomaly_coverage"] = anom_cov
-        self.exp.metric("normal coverage", normal_cov)
+        # self.exp.metric("normal coverage", normal_cov)
         self.metrics["training_normal_coverage"] = normal_cov
 
         # if verbose, show results
@@ -639,7 +639,7 @@ class Experiment:
         self._out_of_sample(verbose=verbose)
 
         # end the experiment
-        self.exp.end()
+        # self.exp.end()
 
 
 
