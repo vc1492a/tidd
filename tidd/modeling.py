@@ -26,6 +26,7 @@ import sys
 from tidd.metrics import confusion_matrix_scores, calculating_coverage, \
     precision_score, recall_score, f1_score, confusion_matrix_classification
 from tidd.plotting import plot_classification, plot_distribution
+from tidd.pipeline import Pipeline
 from tidd.utils import Data, TqdmToLogger, Transform
 import torch
 from tqdm import tqdm
@@ -34,6 +35,21 @@ from typing import List, Union
 # set logging verbosity
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)  # set to logging.DEBUG in development
 logger = logging.getLogger()
+
+
+def _get_image_directories(path: Union[str, Path]) -> list:
+    """Recursively find subdirectories containing .jpg files."""
+    directory_list = []
+    path = str(path)
+    if os.path.isfile(path):
+        return []
+    if any(f.endswith(".jpg") for f in os.listdir(path)):
+        directory_list.append(path)
+    for d in os.listdir(path):
+        new_path = os.path.join(path, d)
+        if os.path.isdir(new_path):
+            directory_list += _get_image_directories(new_path)
+    return directory_list
 
 
 class Model:
@@ -235,23 +251,24 @@ class Experiment:
         logging.info(" Window size: " + str(self.window_size))
         logging.info(" ----------------------------------------------------\n")
 
-        # if generate data is true, create images otherwise point to source data
         if self.generate_data is True:
-
             logging.info("Generating image dataset for experiment...")
 
-            self.training_data_path, self.validation_data_path = Data.prepare_training_validation_data(
-                experiment_name=self.name,
-                training_data_paths=training_data_paths,
-                validation_data_paths=validation_data_paths,
-                window_size=window_size
+            pipe = Pipeline(window_size=window_size)
+            train_out = pipe.run(
+                raw_paths=training_data_paths,
+                output_dir=str(Path(training_data_paths[0]).parent / "experiments" / self.name),
+                split="train",
             )
+            self.training_data_path = str(train_out)
 
-            # TODO: after creation assign the path to the training and validation data
-
-        else: 
-            # TODO: point to the source data
-            pass
+            if validation_data_paths is not None:
+                val_out = pipe.run(
+                    raw_paths=validation_data_paths,
+                    output_dir=str(Path(validation_data_paths[0]).parent / "experiments" / self.name),
+                    split="validation",
+                )
+                self.validation_data_path = str(val_out)
 
         # prep the Experiment object
         logging.info("Specifying CUDA device...")
@@ -375,8 +392,7 @@ class Experiment:
             self.tp_lengths = list()
             self.fp_lengths = list()
 
-            # get the full path of each directory containing image files
-            image_directories = Data._get_image_directories(self.validation_data_path)
+            image_directories = _get_image_directories(self.validation_data_path)
             # filter for those containing "unlabeled"
             image_directories = [i for i in image_directories if "unlabeled" in i]
 

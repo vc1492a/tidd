@@ -31,6 +31,15 @@ _DEFAULTS = {
         "learning_rate": 0.0001,
         "max_epochs": 250,
     },
+    "pipeline": {
+        "encoder": "gadf",
+        "writer": "pil",
+        "window_size": 60,
+        "resample_freq": "1min",
+        "min_sequence_length": 100,
+        "output_path": "data/experiments",
+        "workers": -1,
+    },
     "experiment": {
         "name": "my_experiment",
         "generate_data": False,
@@ -98,6 +107,7 @@ def _resolve_paths(config: dict, project_root: Path) -> None:
     path_keys = {
         "data": ["training_path", "validation_path"],
         "output": ["save_path"],
+        "pipeline": ["output_path"],
     }
 
     for section, keys in path_keys.items():

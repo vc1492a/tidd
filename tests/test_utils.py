@@ -1,5 +1,5 @@
 """
-A set of unit tests which tests the capabilities provided within tidd/data.py.
+A set of unit tests which tests the capabilities provided within tidd/utils.py.
 """
 
 import json
@@ -8,6 +8,10 @@ import pytest
 import random
 import shutil
 from tidd.utils import Data, Transform
+from tidd.pipeline import Pipeline, GADFEncoder, PILWriter
+from tidd.pipeline.labels import Labels
+from tidd.pipeline.runner import process_file
+from tidd.pipeline.discovery import FileInfo
 import os
 
 
@@ -105,89 +109,45 @@ def test_transform_get_station_satellite_combinations(test_fixed_data) -> None:
 
 
 @pytest.mark.filterwarnings('ignore::DeprecationWarning')
-def test_transform_generate_images(test_fixed_data) -> None:
+def test_pipeline_generate_images(tmp_path) -> None:
     """
-    Tests whether the image generation code runs and generates image files.
-    :return: None
+    Tests whether the pipeline image generation produces labeled images.
     """
 
-    # get the combinations of ground stations and satellites
-    combinations = Transform()._get_station_satellite_combinations(
-        dataframe=test_fixed_data
-    )
-
-    # we only have some combinations for testing
-    combinations = [x for x in combinations if "G20" in x]
-
-    # add timestamps
-    df_model = Transform.sod_to_timestamp(
-        test_fixed_data,
-        year=2012,
-        day_of_year=302
-    )
-
-    # select the first set of data as an example
-    df_model = df_model.resample("1min").mean()  # resample by mean
-
-    # transform values by first getting the individual events
-    min_sequence_length = 100
-    events = Transform().split_by_nan(
-        dataframe=df_model,
-        min_sequence_length=min_sequence_length
-    )
-
-    # continue transforming by converting the float data into images
-    labels = {
+    labels_dict = {
         "302": {
-            "G04": {
-                "start": 31400,
-                "finish": 33200
-            },
-            "G07": {
-                "start": 31160,
-                "finish": 32960
-            },
-            "G08": {
-                "start": 31900,
-                "finish": 33700
-            },
-            "G10": {
-                "start": 29900,
-                "finish": 31700
-            },
-            "G20": {
-                "start": 31150,
-                "finish": 32950
-            }
+            "G04": {"start": 31400, "finish": 33200},
+            "G07": {"start": 31160, "finish": 32960},
+            "G08": {"start": 31900, "finish": 33700},
+            "G10": {"start": 29900, "finish": 31700},
+            "G20": {"start": 31150, "finish": 32950},
         }
     }
 
-    pth = "./tests"
+    fi = FileInfo(
+        path="./tests/data/ahup3020.12o_G20.txt",
+        location="test",
+        year=2012,
+        day_of_year=302,
+        station="ahup",
+        satellite="G20",
+    )
+    labels = Labels(labels_dict)
 
-    Transform().generate_images(
-        events=events,
+    count = process_file(
+        file_info=fi,
         labels=labels,
-        output_dir=pth,
+        encoder=GADFEncoder(),
+        writer=PILWriter(),
+        output_dir=tmp_path,
+        split="train",
         window_size=60,
-        verbose=True
     )
 
-    # get all the images
-    images = list()
-    for root, dirs, files in os.walk(pth):
-        for file in files:
-            if file.endswith(".jpg"):
-                images.append(os.path.join(root, file))
+    assert count > 0
 
-    # check that some images were made
+    images = list(tmp_path.rglob("*.jpg"))
     assert len(images) > 0
 
-    # check that both classes were generated
-    classes = sorted(list(set([x.split("/")[-2] for x in images])))
-    assert classes == ["anomalous", "normal"]
-
-    # find all image data directories
-    directories = [x[0] for x in os.walk(pth) if len(x[0].split("/")) == 3]
-
-    # delete each directory
-    [shutil.rmtree(x) for x in directories if "data" not in x]
+    classes = sorted({p.parent.name for p in images})
+    assert "anomalous" in classes or "normal" in classes

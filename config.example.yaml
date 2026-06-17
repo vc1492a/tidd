@@ -17,6 +17,15 @@ model:
   learning_rate: 0.0001
   max_epochs: 250
 
+pipeline:
+  encoder: gadf
+  writer: pil
+  window_size: 60
+  resample_freq: 1min
+  min_sequence_length: 100
+  output_path: data/experiments
+  workers: -1   # -1 = cpu_count - 1
+
 experiment:
   name: my_experiment
   generate_data: false
