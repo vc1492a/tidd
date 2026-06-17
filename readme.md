@@ -4,8 +4,8 @@ A toolkit for the detection of Traveling Ionospheric Disturbances (TIDs) in the 
 tsunami waves, earthquakes, large explosions and other phenomena. A collaboration between individuals and teams the 
 NASA Jet Propulsion Laboratory (JPL), Sapienza University of Rome and the University of California - Los Angeles (UCLA). 
 
-[![Version](https://img.shields.io/badge/version-0.1.2-blue.svg)](https://github.com/vc1492a/sTEC-d-dt-Anomaly-Detection/archive/0.1.2.tar.gz)
-[![Language](https://img.shields.io/badge/python-3.7,%203.8-blue)](#)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/vc1492a/tidd/archive/0.2.0.tar.gz)
+[![Language](https://img.shields.io/badge/python-3.12+-blue)](#)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![DOI](https://zenodo.org/badge/241190815.svg)](https://zenodo.org/doi/10.5281/zenodo.12571499)
 
@@ -38,52 +38,42 @@ to an image using GADFs and fed into a model for predicting whether a TID is pre
 Currently, simple experiments show conversion from float data to a prediction takes 
 approximately 1.1. seconds. 
 
-## Getting Started 
+## Getting Started
 
-First, setup a Python virtual environment in which to install project 
-dependencies and then install the library. Then, pull the appropriate 
-branch and then install: 
+This project uses [uv](https://docs.astral.sh/uv/) and
+[Poetry](https://python-poetry.org/) for Python version and package
+management. Python 3.12+ is required.
 
-```
-pip install . 
-```
-
-Make sure to check out the `notebooks` and `data` directories 
-which contain Jupyter notebooks with latest work and the source data 
-used in the experiments. 
-
-## Dependencies
-
-This project requires that Python version is versioned between 3.5 and 
-3.8. Requirements for the software, running tests, and notebooks are 
-listed in `requirements.txt`, `requirements_ci.txt`, and `requirements_notebooks.txt`, 
-and may be installed into a virtual environment in the following way: 
+### Install uv (if not already installed)
 
 ```bash
-pip install -r requirements.txt
-pip install -r requirements_ci.txt # for unit tests 
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Some of the visualizations within the Jupyter notebooks require 
-the [geos](https://trac.osgeo.org/geos/) library, which can be installed 
-using homebrew on macOS:
+### Create a virtual environment and install dependencies
 
-```
-brew install geos
-```
-
-On a linux machine, GEOS can be installed without root access if working 
-in Anaconda environments: 
-
-```
-conda install -c anaconda geos
+```bash
+uv venv --python 3.12
+source .venv/bin/activate
+uv pip install poetry
+poetry install --with dev,notebooks
 ```
 
-Then, install the notebook dependencies: 
+### Configure experiment paths
 
+Copy the example configuration and edit paths for your environment:
+
+```bash
+cp config.example.yaml config.yaml
 ```
-pip install -r requirements_notebooks.txt
-```
+
+The config file controls data paths, output directories, and model
+parameters used by the notebooks and experiment scripts. See
+`config.example.yaml` for all available options.
+
+Make sure to check out the `notebooks` and `data` directories which
+contain Jupyter notebooks with latest work and the source data used in
+the experiments.
 
 ## The Data
 
@@ -153,8 +143,8 @@ reviewed prior to being pulled into the `master` branch.
 When contributing, please ensure to run unit tests and add additional tests as 
 necessary if adding new functionality. To run the unit tests, use `pytest`: 
 
-```
-python -m  pytest --cov=tidd --capture=no --log-cli-level=CRITICAL
+```bash
+python -m pytest --cov=tidd --capture=no
 ```
 
 This should report the result of your unit tests as well as information 
@@ -169,17 +159,15 @@ submitting a pull request.
 Core contributors are responsible for maintaining `changelog.md` in 
 coordination with new releases. 
 
-### Releasing New Versions 
+### Releasing New Versions
 
-To release a new version of the software, simply tag the realse after building 
-the distribution and wheels: 
+To release a new version of the software, update the version in
+`pyproject.toml` and `tidd/__init__.py`, then tag the release:
 
 ```bash
-python setup.py sdist bdist_wheel
+poetry build
 git tag x.x.x -m 'some commit message here'
 git push origin --tags <branch_name>
-git add dist/
-git push origin <branch_name>
 ```
 
 ## License

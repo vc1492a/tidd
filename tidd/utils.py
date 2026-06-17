@@ -64,14 +64,10 @@ class Transform:
         :return: a list of Pandas Dataframes with at least min_sequence_length observations.
         """
 
-        # split by NaN
-        events = np.split(dataframe, np.where(np.isnan(dataframe))[0])
-
-        # keep non-NaN entries
-        events = [ev[~np.isnan(ev)] for ev in events if not isinstance(ev, np.ndarray)]
-
-        # filter by min_sequence_length
-        events = [ev.dropna() for ev in events if not ev.empty and ev.shape[0] > min_sequence_length]
+        nan_mask = dataframe.isna().any(axis=1)
+        group_id = nan_mask.cumsum()
+        groups = [group_df.dropna() for _, group_df in dataframe.groupby(group_id)]
+        events = [g for g in groups if not g.empty and g.shape[0] > min_sequence_length]
 
         return events
 

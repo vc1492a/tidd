@@ -18,9 +18,8 @@ def test_confusion_matrix_scores() -> None:
     # check we have a 4 tuple
     assert len(scores) == 4
 
-    # checking that the calculations work
     total = np.sum(random_confusion_matrix)
-    assert (scores[0] * total) == np.trace(random_confusion_matrix)
+    assert np.isclose(scores[0] * total, np.trace(random_confusion_matrix))
 
     known_values = np.array([[1, 1], [1, 1]])
     scores_from_known_matrix = confusion_matrix_scores(known_values)

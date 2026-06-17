@@ -15,7 +15,7 @@ import os
 import sys
 from tqdm import tqdm
 
-from tidd.utils import Data, Transforms
+from tidd.utils import Data, Transform
 from tidd.utils import TqdmToLogger
 
 
@@ -131,13 +131,13 @@ def rename_later(path) -> None:
                 df = df.resample("1min").mean()
 
                 # transform values by first getting the individual events
-                events = Transforms().split_by_nan(
+                events = Transform().split_by_nan(
                     dataframe=df,
                     min_sequence_length=100
                 )
 
                 # generate the images based on the ground truth labels
-                Transforms().generate_images(
+                Transform().generate_images(
                     events=events,
                     labels=labels,
                     # TODO: note exp name

@@ -4,6 +4,22 @@ All notable changes to the software will be documented in this Changelog.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) 
 and adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.2.0
+### Changed
+- Switched to uv + Poetry for Python version and package management, replacing
+  `setup.py` and `requirements*.txt` files with `pyproject.toml`.
+- Updated all dependencies to latest versions compatible with Python 3.12+
+  (PyTorch 2.x, FastAI 2.8, NumPy 2.x, pandas 3.x, scikit-learn 1.9, etc.).
+- Removed Hyperdash dependency (abandoned); experiment metrics are now tracked
+  internally via `Experiment.metrics` and `Experiment.params` dicts.
+- Added YAML-based experiment configuration (`config.example.yaml`) with a
+  config loader (`tidd/config.py`) so data paths, model parameters, and output
+  directories are no longer hardcoded.
+- Updated notebooks to load paths and parameters from `config.yaml`.
+- Fixed `split_by_nan` to work correctly with modern pandas/NumPy versions.
+- Fixed stale `Transforms` import in `examples/transform_data.py`.
+- Added `tidd/__init__.py` for proper package initialization.
+
 ## 0.1.1
 ### Changed
 - Added support for parallel GPU training using `fastai.distributed`

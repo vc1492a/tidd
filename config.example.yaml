@@ -1,0 +1,23 @@
+# TIDD Experiment Configuration
+# Copy this file to config.yaml and edit paths for your environment.
+
+data:
+  training_path: data/experiments/generalization_1/hawaii
+  validation_path: data/experiments/generalization_1/chile
+  raw_paths:
+    hawaii: data/hawaii
+    chile: data/chile
+
+output:
+  save_path: output
+
+model:
+  architecture: resnet34
+  batch_size: 256
+  learning_rate: 0.0001
+  max_epochs: 250
+
+experiment:
+  name: my_experiment
+  generate_data: false
+  cuda_device: 0

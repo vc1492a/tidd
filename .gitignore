@@ -1,10 +1,13 @@
 **.DS_store
 /.idea
 /venv
+.venv/
 *.ipynb_checkpoints
 .mapbox_token
 *.pyc
+__pycache__/
 /tidd.egg-info/*
+*.egg-info/
 .coverage
 .coverage.*
 /data
@@ -13,8 +16,10 @@ data.tar.gz
 */.ipynb_checkpoints/*
 proposals
 documents
+config.yaml
 
-#vscode files
+# vscode files
 .vscode/*
 
-
+# poetry
+poetry.lock
