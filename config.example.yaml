@@ -2,8 +2,8 @@
 # Copy this file to config.yaml and edit paths for your environment.
 
 data:
-  training_path: data/experiments/generalization_1/hawaii
-  validation_path: data/experiments/generalization_1/chile
+  training_path: data/experiments/proof_of_concept/hawaii/train
+  validation_path: data/experiments/proof_of_concept/hawaii/validation
   raw_paths:
     hawaii: data/hawaii
     chile: data/chile

@@ -10,10 +10,9 @@ A collection of functions covering the functionality needed to:
 # imports
 import fastai
 from fastai.vision.all import resnet34, \
-    Adam, ImageDataLoaders, Resize, aug_transforms, cnn_learner, error_rate, accuracy, \
+    Adam, ImageDataLoaders, Resize, aug_transforms, vision_learner, error_rate, accuracy, \
     ShowGraphCallback, CSVLogger, ReduceLROnPlateau, EarlyStoppingCallback, SaveModelCallback, \
     ClassificationInterpretation, load_learner
-import fastai.distributed
 from fastcore.parallel import parallel
 import json
 import logging
@@ -101,7 +100,8 @@ class Model:
 
         # train the model
 
-        if parallel_training: 
+        if parallel_training:
+            import fastai.distributed
             with self.learner.parallel_ctx(parallel_gpus):
                 self.learner.fit(
                     max_epochs,
@@ -334,7 +334,7 @@ class Experiment:
         save_path = self.save_path + '/' + 'model_output'
         Path(save_path).mkdir(parents=True, exist_ok=True)
 
-        self.model.learner = cnn_learner(
+        self.model.learner = vision_learner(
             self.dls,  # data
             self.model.architecture,  # architecture
             metrics=[error_rate, accuracy],  # metrics
